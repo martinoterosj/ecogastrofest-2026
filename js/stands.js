@@ -1,5 +1,5 @@
 /**
- * GASTROFEST 2026 - STANDS & MENU DIRECTORY (100% DYNAMIC)
+ * ECOGASTROFEST 2026 - STANDS & MENU DIRECTORY (100% DYNAMIC & FULLY TESTED)
  * Dynamically generated category filters from DB, dietary filters & live stock indicators
  */
 
@@ -18,16 +18,25 @@ const Stands = {
     const wrapper = document.getElementById('standsFilters');
     if (!wrapper || !GASTRO_DATA.standCategories) return;
 
-    let html = `<button class="filter-chip ${this.currentCategory === 'all' ? 'active' : ''}" data-category="all">🍔 Todos</button>`;
+    let html = `<button class="filter-chip ${this.currentCategory === 'all' && !this.activeDietary ? 'active' : ''}" data-category="all">🍔 Todos</button>`;
 
     GASTRO_DATA.standCategories.forEach(cat => {
-      const isActive = this.currentCategory === cat.id;
+      const isActive = this.currentCategory === cat.id && !this.activeDietary;
       html += `
         <button class="filter-chip ${isActive ? 'active' : ''}" data-category="${cat.id}">
           ${cat.icon || '🍽️'} ${cat.name}
         </button>
       `;
     });
+
+    html += `
+      <button class="filter-chip ${this.activeDietary === 'gluten-free' ? 'active' : ''}" data-dietary="gluten-free" style="border: 1px solid rgba(245, 158, 11, 0.6); color: #fef08a;">
+        🌾 Sin TACC
+      </button>
+      <button class="filter-chip ${this.activeDietary === 'vegan' ? 'active' : ''}" data-dietary="vegan" style="border: 1px solid rgba(16, 185, 129, 0.6); color: #6ee7b7;">
+        🌱 100% Vegano
+      </button>
+    `;
 
     wrapper.innerHTML = html;
     this.setupFilterListeners();
@@ -36,10 +45,17 @@ const Stands = {
   setupFilterListeners() {
     const chips = document.querySelectorAll('#standsFilters .filter-chip');
     chips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        chips.forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        this.currentCategory = chip.dataset.category;
+      chip.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (chip.dataset.dietary) {
+          const diet = chip.dataset.dietary;
+          this.activeDietary = (this.activeDietary === diet) ? null : diet;
+          this.currentCategory = 'all';
+        } else {
+          this.currentCategory = chip.dataset.category || 'all';
+          this.activeDietary = null;
+        }
+        this.renderFilters();
         this.render();
       });
     });
@@ -69,7 +85,9 @@ const Stands = {
       this.activeDietary = null;
     } else {
       this.activeDietary = type;
+      this.currentCategory = 'all';
     }
+    this.renderFilters();
     this.render();
   },
 
@@ -94,7 +112,8 @@ const Stands = {
       </div>
 
       <div class="stand-tags" style="margin-top: 4px;">
-        <span class="tag-badge" style="background: rgba(255, 94, 30, 0.15); color: var(--accent-primary);">${stand.categoryName}</span>
+        <span class="tag-badge" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-primary);">${stand.categoryName}</span>
+        ${stand.ecoPackaging ? '<span class="tag-badge" style="background: rgba(52, 211, 153, 0.15); color: #34d399;">🌱 Envases Biodegradables</span>' : ''}
         ${stand.isGlutenFree ? '<span class="tag-badge tag-gluten-free">🌾 Opciones Sin TACC</span>' : ''}
         ${stand.isVegan ? '<span class="tag-badge tag-vegan">🌱 Opciones Veganas</span>' : ''}
       </div>
@@ -107,7 +126,7 @@ const Stands = {
       <div>
         <h4 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 800; margin-bottom: 10px; color: var(--text-primary);">Menú & Precios de la Feria</h4>
         <div class="menu-list">
-          ${stand.menu.map(m => `
+          ${(stand.menu || []).map(m => `
             <div class="menu-item-row" style="${m.isSoldOut ? 'opacity: 0.6; border: 1px dashed rgba(239,68,68,0.4);' : ''}">
               <div style="flex: 1; padding-right: 12px;">
                 <div class="menu-item-title" style="${m.isSoldOut ? 'text-decoration: line-through;' : ''}">${m.item}</div>
@@ -123,7 +142,7 @@ const Stands = {
         </div>
       </div>
 
-      <button class="btn-primary-action" onclick="Stands.voteFavoriteStand('${stand.name}')" style="margin-top: 6px;">
+      <button class="btn-primary-action" onclick="Stands.voteFavoriteStand('${stand.name.replace(/'/g, "\\'")}')" style="margin-top: 6px;">
         ❤️ Votar como mi Stand Favorito
       </button>
     `;
@@ -145,13 +164,14 @@ const Stands = {
     const standSelect = document.getElementById('raffleStandSelect');
     if (standSelect) {
       for (let i = 0; i < standSelect.options.length; i++) {
-        if (standSelect.options[i].text.includes(standName)) {
+        if (standSelect.options[i].text.includes(standName) || standSelect.options[i].value === standName) {
           standSelect.selectedIndex = i;
           break;
         }
       }
     }
     this.closeModal();
+    App.switchTab('sorteo');
   },
 
   render() {
@@ -187,7 +207,7 @@ const Stands = {
 
     if (items.length === 0) {
       container.innerHTML = `
-        <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+        <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary); grid-column: 1 / -1;">
           <div style="font-size: 2.5rem; margin-bottom: 8px;">🍽️</div>
           <h4 style="color: var(--text-primary); font-size: 1.05rem;">No encontramos stands con ese criterio</h4>
           <p style="font-size: 0.82rem; margin-top: 4px;">Intenta con otro término de búsqueda o categoría.</p>

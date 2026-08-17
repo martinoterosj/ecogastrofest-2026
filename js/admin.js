@@ -141,14 +141,38 @@ const AdminApp = {
       const res = await fetch('./api/sync');
       if (res.ok) {
         this.dbState = await res.json();
-        this.renderSchedule();
-        this.renderStands();
-        this.renderAnnouncements();
-        this.renderRaffle();
-        this.renderConfig();
+        localStorage.setItem('gastrofest_db', JSON.stringify(this.dbState));
+      } else {
+        throw new Error('Static host fallback');
       }
     } catch (e) {
-      console.warn('Sync failed', e);
+      console.log('ℹ️ Usando almacenamiento local/cloud para el panel de administración');
+      const saved = localStorage.getItem('gastrofest_db');
+      if (saved) {
+        this.dbState = JSON.parse(saved);
+      } else if (window.GASTRO_DATA) {
+        this.dbState = JSON.parse(JSON.stringify(GASTRO_DATA));
+      }
+    }
+
+    if (this.dbState) {
+      this.renderSchedule();
+      this.renderStands();
+      this.renderAnnouncements();
+      this.renderRaffle();
+      this.renderConfig();
+    }
+  },
+
+  persistOffline() {
+    if (this.dbState) {
+      localStorage.setItem('gastrofest_db', JSON.stringify(this.dbState));
+      if (window.GASTRO_DATA) {
+        Object.assign(GASTRO_DATA, this.dbState);
+      }
+      if (window.DBAdapter && DBAdapter.isCloudReady) {
+        DBAdapter.saveCloudData(this.dbState);
+      }
     }
   },
 
@@ -296,22 +320,37 @@ const AdminApp = {
       if (res.ok) {
         this.closeShowModal();
         this.fetchState();
-      } else {
-        alert('Error al guardar el show');
+        return;
       }
-    } catch (err) {
-      alert('Error de conexión');
+    } catch (err) {}
+
+    // Fallback Offline & Cloud Save
+    if (this.editingShowId) {
+      const idx = this.dbState.schedule.findIndex(s => s.id === this.editingShowId);
+      if (idx > -1) this.dbState.schedule[idx] = { ...this.dbState.schedule[idx], ...payload };
+    } else {
+      const newShow = { id: `ev-${Date.now()}`, ...payload };
+      this.dbState.schedule.push(newShow);
     }
+    this.persistOffline();
+    this.closeShowModal();
+    this.renderSchedule();
+    alert('✅ Show guardado con éxito!');
   },
 
   async deleteShow(id) {
     if (!confirm('¿Deseas dar de baja este show de la agenda?')) return;
     try {
       const res = await fetch(`./api/schedule/${id}`, { method: 'DELETE' });
-      if (res.ok) this.fetchState();
-    } catch (err) {
-      alert('Error al eliminar');
-    }
+      if (res.ok) {
+        this.fetchState();
+        return;
+      }
+    } catch (err) {}
+
+    this.dbState.schedule = this.dbState.schedule.filter(s => s.id !== id);
+    this.persistOffline();
+    this.renderSchedule();
   },
 
   async updateEventStatus(id, status) {
@@ -321,9 +360,17 @@ const AdminApp = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
       });
-      if (res.ok) this.fetchState();
-    } catch (e) {
-      alert('Error al actualizar evento');
+      if (res.ok) {
+        this.fetchState();
+        return;
+      }
+    } catch (e) {}
+
+    const ev = this.dbState.schedule.find(s => s.id === id);
+    if (ev) {
+      ev.status = status;
+      this.persistOffline();
+      this.renderSchedule();
     }
   },
 
@@ -343,7 +390,7 @@ const AdminApp = {
     const newEnd = addMins(ev.endTime, minutes);
 
     try {
-      await fetch(`./api/schedule/${id}`, {
+      const res = await fetch(`./api/schedule/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -352,10 +399,17 @@ const AdminApp = {
           status: minutes > 0 ? 'delayed' : 'scheduled'
         })
       });
-      this.fetchState();
-    } catch (e) {
-      alert('Error ajustando horario');
-    }
+      if (res.ok) {
+        this.fetchState();
+        return;
+      }
+    } catch (e) {}
+
+    ev.startTime = newStart;
+    ev.endTime = newEnd;
+    ev.status = minutes > 0 ? 'delayed' : 'scheduled';
+    this.persistOffline();
+    this.renderSchedule();
   },
 
   // =========================================================================
@@ -529,22 +583,43 @@ const AdminApp = {
       if (res.ok) {
         this.closeStandModal();
         this.fetchState();
-      } else {
-        alert('Error al guardar stand');
+        return;
       }
-    } catch (err) {
-      alert('Error de conexión');
+    } catch (err) {}
+
+    // Fallback Offline & Cloud Save
+    if (this.editingStandId) {
+      const idx = this.dbState.stands.findIndex(s => s.id === this.editingStandId);
+      if (idx > -1) this.dbState.stands[idx] = { ...this.dbState.stands[idx], ...payload };
+    } else {
+      const newStand = {
+        id: `st-${Date.now()}`,
+        ...payload,
+        rating: '5.0 ⭐',
+        image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&auto=format&fit=crop&q=80',
+        menu: []
+      };
+      this.dbState.stands.push(newStand);
     }
+    this.persistOffline();
+    this.closeStandModal();
+    this.renderStands();
+    alert('✅ Stand guardado con éxito!');
   },
 
   async deleteStand(id) {
     if (!confirm('¿Deseas eliminar este stand y su menú?')) return;
     try {
       const res = await fetch(`./api/stands/${id}`, { method: 'DELETE' });
-      if (res.ok) this.fetchState();
-    } catch (err) {
-      alert('Error al eliminar');
-    }
+      if (res.ok) {
+        this.fetchState();
+        return;
+      }
+    } catch (err) {}
+
+    this.dbState.stands = this.dbState.stands.filter(s => s.id !== id);
+    this.persistOffline();
+    this.renderStands();
   },
 
   // Dish CRUD
@@ -607,11 +682,22 @@ const AdminApp = {
       if (res.ok) {
         this.closeDishModal();
         this.fetchState();
-      } else {
-        alert('Error al guardar el plato');
+        return;
       }
-    } catch (err) {
-      alert('Error de conexión');
+    } catch (err) {}
+
+    const stand = this.dbState.stands.find(s => s.id === this.editingDishContext.standId);
+    if (stand) {
+      if (!stand.menu) stand.menu = [];
+      if (this.editingDishContext.menuId) {
+        const dishIdx = stand.menu.findIndex(m => m.id === this.editingDishContext.menuId || m.item === this.editingDishContext.menuId);
+        if (dishIdx > -1) stand.menu[dishIdx] = { ...stand.menu[dishIdx], ...payload };
+      } else {
+        stand.menu.push({ id: `dish-${Date.now()}`, ...payload });
+      }
+      this.persistOffline();
+      this.closeDishModal();
+      this.renderStandMenu();
     }
   },
 
@@ -619,22 +705,41 @@ const AdminApp = {
     if (!confirm('¿Deseas eliminar este plato del menú?')) return;
     try {
       const res = await fetch(`./api/stands/${standId}/menu/${menuId}`, { method: 'DELETE' });
-      if (res.ok) this.fetchState();
-    } catch (err) {
-      alert('Error de red');
+      if (res.ok) {
+        this.fetchState();
+        return;
+      }
+    } catch (err) {}
+
+    const stand = this.dbState.stands.find(s => s.id === standId);
+    if (stand && stand.menu) {
+      stand.menu = stand.menu.filter(m => m.id !== menuId && m.item !== menuId);
+      this.persistOffline();
+      this.renderStandMenu();
     }
   },
 
   async toggleStock(standId, itemTitle, isSoldOut) {
     try {
-      await fetch(`./api/stands/${standId}/menu`, {
+      const res = await fetch(`./api/stands/${standId}/menu`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ item: itemTitle, isSoldOut })
       });
-      this.fetchState();
-    } catch (e) {
-      alert('Error al actualizar disponibilidad');
+      if (res.ok) {
+        this.fetchState();
+        return;
+      }
+    } catch (e) {}
+
+    const stand = this.dbState.stands.find(s => s.id === standId);
+    if (stand && stand.menu) {
+      const dish = stand.menu.find(m => m.item === itemTitle);
+      if (dish) {
+        dish.isSoldOut = isSoldOut;
+        this.persistOffline();
+        this.renderStandMenu();
+      }
     }
   },
 
@@ -645,7 +750,7 @@ const AdminApp = {
     const list = document.getElementById('adminAnnouncementsList');
     if (!list || !this.dbState) return;
 
-    if (this.dbState.announcements.length === 0) {
+    if (!this.dbState.announcements || this.dbState.announcements.length === 0) {
       list.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">No hay avisos flash activos.</p>';
       return;
     }
@@ -672,26 +777,49 @@ const AdminApp = {
 
     if (!title || !message) return;
 
+    const newAnn = {
+      id: `ann-${Date.now()}`,
+      title,
+      message,
+      icon,
+      createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
     try {
-      await fetch('./api/announcements', {
+      const res = await fetch('./api/announcements', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, message, icon })
       });
-      document.getElementById('annTitle').value = '';
-      document.getElementById('annMessage').value = '';
-      this.fetchState();
-    } catch (e) {
-      alert('Error enviando aviso');
-    }
+      if (res.ok) {
+        document.getElementById('annTitle').value = '';
+        document.getElementById('annMessage').value = '';
+        this.fetchState();
+        return;
+      }
+    } catch (e) {}
+
+    if (!this.dbState.announcements) this.dbState.announcements = [];
+    this.dbState.announcements.push(newAnn);
+    this.persistOffline();
+    document.getElementById('annTitle').value = '';
+    document.getElementById('annMessage').value = '';
+    this.renderAnnouncements();
   },
 
   async deleteAnnouncement(id) {
     try {
-      await fetch(`./api/announcements/${id}`, { method: 'DELETE' });
-      this.fetchState();
-    } catch (e) {
-      alert('Error eliminando aviso');
+      const res = await fetch(`./api/announcements/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        this.fetchState();
+        return;
+      }
+    } catch (e) {}
+
+    if (this.dbState.announcements) {
+      this.dbState.announcements = this.dbState.announcements.filter(a => a.id !== id);
+      this.persistOffline();
+      this.renderAnnouncements();
     }
   },
 
@@ -703,10 +831,11 @@ const AdminApp = {
     const listEl = document.getElementById('adminRaffleParticipantsList');
     if (!countEl || !this.dbState) return;
 
-    countEl.textContent = `${this.dbState.participantsCount} personas registradas`;
+    const participants = this.dbState.participants || JSON.parse(localStorage.getItem('gastrofest_participants') || '[]');
+    countEl.textContent = `${participants.length} personas registradas`;
 
-    if (listEl && this.dbState.participants) {
-      listEl.innerHTML = this.dbState.participants.map(p => `
+    if (listEl) {
+      listEl.innerHTML = participants.map(p => `
         <div class="admin-item-row" style="flex-direction:row; justify-content:space-between; align-items:center; padding:10px 14px;">
           <div>
             <strong style="color:#fef08a;">#${p.code}</strong> — <span style="font-weight:700;">${p.name}</span>
@@ -723,15 +852,33 @@ const AdminApp = {
   async deleteParticipant(code) {
     if (!confirm(`¿Eliminar al participante #${code}?`)) return;
     try {
-      await fetch(`./api/raffle/participants/${code}`, { method: 'DELETE' });
-      this.fetchState();
-    } catch (e) {
-      alert('Error al eliminar');
-    }
+      const res = await fetch(`./api/raffle/participants/${code}`, { method: 'DELETE' });
+      if (res.ok) {
+        this.fetchState();
+        return;
+      }
+    } catch (e) {}
+
+    let participants = JSON.parse(localStorage.getItem('gastrofest_participants') || '[]');
+    participants = participants.filter(p => p.code !== code);
+    localStorage.setItem('gastrofest_participants', JSON.stringify(participants));
+    this.renderRaffle();
   },
 
   exportCSV() {
-    window.open('./api/raffle/export', '_blank');
+    const participants = this.dbState.participants || JSON.parse(localStorage.getItem('gastrofest_participants') || '[]');
+    let csv = "Codigo,Nombre,Telefono,StandFavorito\n";
+    participants.forEach(p => {
+      csv += `"${p.code}","${p.name}","${p.phone}","${p.stand}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `sorteo_gastrofest_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   },
 
   // =========================================================================
@@ -754,49 +901,50 @@ const AdminApp = {
       if (document.getElementById('cfgEventParking')) document.getElementById('cfgEventParking').value = ev.parkingInfo || '';
     }
 
-    // 2. Show Categories
+    // 2. Render Show Categories
     const showCatList = document.getElementById('adminShowCategoriesList');
     if (showCatList && this.dbState.showCategories) {
       showCatList.innerHTML = this.dbState.showCategories.map(c => `
-        <span class="tag-badge" style="padding:6px 12px; font-size:0.82rem; background:rgba(255,255,255,0.08); display:inline-flex; align-items:center; gap:6px;">
-          ${c.icon || '🔥'} ${c.name}
-          <button onclick="AdminApp.deleteCategory('show', '${c.id}')" style="background:none; border:none; color:#f87171; cursor:pointer; font-weight:800;">✕</button>
-        </span>
+        <div class="admin-item-row" style="flex-direction:row; justify-content:space-between; align-items:center; padding:8px 12px;">
+          <div><span style="font-size:1.2rem;">${c.icon || '🔥'}</span> <strong>${c.name}</strong> <span style="font-size:0.75rem; color:var(--text-muted);">(${c.id})</span></div>
+          <button class="btn-admin-action btn-danger" onclick="AdminApp.deleteCategory('show', '${c.id}')">✕</button>
+        </div>
       `).join('');
     }
 
-    // 3. Stand Categories
+    // 3. Render Stand Categories
     const standCatList = document.getElementById('adminStandCategoriesList');
     if (standCatList && this.dbState.standCategories) {
       standCatList.innerHTML = this.dbState.standCategories.map(c => `
-        <span class="tag-badge" style="padding:6px 12px; font-size:0.82rem; background:rgba(255,255,255,0.08); display:inline-flex; align-items:center; gap:6px;">
-          ${c.icon || '🍽️'} ${c.name}
-          <button onclick="AdminApp.deleteCategory('stand', '${c.id}')" style="background:none; border:none; color:#f87171; cursor:pointer; font-weight:800;">✕</button>
-        </span>
+        <div class="admin-item-row" style="flex-direction:row; justify-content:space-between; align-items:center; padding:8px 12px;">
+          <div><span style="font-size:1.2rem;">${c.icon || '🍽️'}</span> <strong>${c.name}</strong> <span style="font-size:0.75rem; color:var(--text-muted);">(${c.id})</span></div>
+          <button class="btn-admin-action btn-danger" onclick="AdminApp.deleteCategory('stand', '${c.id}')">✕</button>
+        </div>
       `).join('');
     }
 
-    // 4. Stages
+    // 4. Render Stages
     const stagesList = document.getElementById('adminStagesList');
     if (stagesList && this.dbState.stages) {
       stagesList.innerHTML = this.dbState.stages.map(s => `
-        <span class="tag-badge" style="padding:6px 12px; font-size:0.82rem; background:rgba(59,130,246,0.15); color:#93c5fd; display:inline-flex; align-items:center; gap:6px;">
-          ${s.icon || '🎤'} ${s.name}
-          <button onclick="AdminApp.deleteStage('${s.id}')" style="background:none; border:none; color:#f87171; cursor:pointer; font-weight:800;">✕</button>
-        </span>
+        <div class="admin-item-row" style="flex-direction:row; justify-content:space-between; align-items:center; padding:8px 12px;">
+          <div><span style="font-size:1.2rem;">${s.icon || '🎤'}</span> <strong>${s.name}</strong></div>
+          <button class="btn-admin-action btn-danger" onclick="AdminApp.deleteStage('${s.id}')">✕</button>
+        </div>
       `).join('');
     }
 
-    // 5. Sponsors
+    // 5. Render Sponsors
     const sponsorsList = document.getElementById('adminSponsorsList');
     if (sponsorsList && this.dbState.sponsors) {
       let html = '';
       const renderItem = (sp, tier) => `
         <div class="admin-item-row" style="flex-direction:row; justify-content:space-between; align-items:center; padding:8px 12px;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            ${sp.logoUrl ? `<img src="${sp.logoUrl}" style="width:32px; height:32px; border-radius:4px; object-fit:cover;">` : `<span style="font-size:1.2rem;">${sp.icon || '🤝'}</span>`}
+          <div style="display:flex; align-items:center; gap:8px;">
+            ${sp.logoUrl ? `<img src="${sp.logoUrl}" style="width:32px; height:32px; object-fit:contain; border-radius:4px; background:#fff;">` : `<span style="font-size:1.2rem;">${sp.icon || '🤝'}</span>`}
             <div>
-              <span style="font-weight:800; color:${tier === 'gold' ? '#fcd34d' : '#cbd5e1'};">[${tier.toUpperCase()}]</span> <strong>${sp.name}</strong> (${sp.tier})
+              <strong>${sp.name}</strong>
+              <div style="font-size:0.72rem; color:var(--admin-accent); font-weight:800;">${tier.toUpperCase()} • ${sp.tier}</div>
             </div>
           </div>
           <button class="btn-admin-action btn-danger" onclick="AdminApp.deleteSponsor('${tier}', '${encodeURIComponent(sp.name)}')">✕</button>
@@ -834,12 +982,15 @@ const AdminApp = {
         body: JSON.stringify(payload)
       });
       if (res.ok) {
-        alert('✅ ¡Datos generales del evento actualizados con éxito!');
         this.fetchState();
+        alert('✅ ¡Datos generales del evento actualizados con éxito!');
+        return;
       }
-    } catch (e) {
-      alert('Error guardando configuración');
-    }
+    } catch (e) {}
+
+    this.dbState.event = { ...this.dbState.event, ...payload };
+    this.persistOffline();
+    alert('✅ ¡Datos generales del evento actualizados con éxito!');
   },
 
   async addCategory(e, type) {
@@ -851,7 +1002,6 @@ const AdminApp = {
     const name = document.getElementById(nameId).value.trim();
     if (!name) return;
 
-    // Generate clean URL-safe slug
     const cleanId = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
     try {
@@ -863,19 +1013,33 @@ const AdminApp = {
       if (res.ok) {
         document.getElementById(nameId).value = '';
         this.fetchState();
+        return;
       }
-    } catch (e) {
-      alert('Error agregando categoría');
-    }
+    } catch (e) {}
+
+    const key = type === 'show' ? 'showCategories' : 'standCategories';
+    if (!this.dbState[key]) this.dbState[key] = [];
+    this.dbState[key].push({ id: cleanId, name, icon });
+    this.persistOffline();
+    document.getElementById(nameId).value = '';
+    this.renderConfig();
   },
 
   async deleteCategory(type, id) {
     if (!confirm('¿Deseas eliminar esta categoría?')) return;
     try {
       const res = await fetch(`./api/categories/${type}/${id}`, { method: 'DELETE' });
-      if (res.ok) this.fetchState();
-    } catch (e) {
-      alert('Error eliminando');
+      if (res.ok) {
+        this.fetchState();
+        return;
+      }
+    } catch (e) {}
+
+    const key = type === 'show' ? 'showCategories' : 'standCategories';
+    if (this.dbState[key]) {
+      this.dbState[key] = this.dbState[key].filter(c => c.id !== id);
+      this.persistOffline();
+      this.renderConfig();
     }
   },
 
@@ -894,19 +1058,31 @@ const AdminApp = {
       if (res.ok) {
         document.getElementById('newStageName').value = '';
         this.fetchState();
+        return;
       }
-    } catch (e) {
-      alert('Error agregando escenario');
-    }
+    } catch (e) {}
+
+    if (!this.dbState.stages) this.dbState.stages = [];
+    this.dbState.stages.push({ id: `stg-${Date.now()}`, name, icon });
+    this.persistOffline();
+    document.getElementById('newStageName').value = '';
+    this.renderConfig();
   },
 
   async deleteStage(id) {
     if (!confirm('¿Deseas eliminar este escenario?')) return;
     try {
       const res = await fetch(`./api/stages/${id}`, { method: 'DELETE' });
-      if (res.ok) this.fetchState();
-    } catch (e) {
-      alert('Error eliminando escenario');
+      if (res.ok) {
+        this.fetchState();
+        return;
+      }
+    } catch (e) {}
+
+    if (this.dbState.stages) {
+      this.dbState.stages = this.dbState.stages.filter(s => s.id !== id);
+      this.persistOffline();
+      this.renderConfig();
     }
   },
 
@@ -935,19 +1111,40 @@ const AdminApp = {
         document.getElementById('newSponsorLabel').value = '';
         if (document.getElementById('newSponsorLogo')) document.getElementById('newSponsorLogo').value = '';
         this.fetchState();
+        return;
       }
-    } catch (e) {
-      alert('Error agregando sponsor');
-    }
+    } catch (e) {}
+
+    if (!this.dbState.sponsors) this.dbState.sponsors = { gold: [], silver: [] };
+    if (!this.dbState.sponsors[tier]) this.dbState.sponsors[tier] = [];
+    this.dbState.sponsors[tier].push({
+      name,
+      tier: tierName,
+      logoUrl,
+      icon: tier === 'gold' ? '⭐' : '🥈'
+    });
+    this.persistOffline();
+    document.getElementById('newSponsorName').value = '';
+    document.getElementById('newSponsorLabel').value = '';
+    if (document.getElementById('newSponsorLogo')) document.getElementById('newSponsorLogo').value = '';
+    this.renderConfig();
   },
 
   async deleteSponsor(tier, name) {
     if (!confirm('¿Deseas eliminar este sponsor?')) return;
     try {
       const res = await fetch(`./api/sponsors/${tier}/${name}`, { method: 'DELETE' });
-      if (res.ok) this.fetchState();
-    } catch (e) {
-      alert('Error eliminando sponsor');
+      if (res.ok) {
+        this.fetchState();
+        return;
+      }
+    } catch (e) {}
+
+    const decodedName = decodeURIComponent(name);
+    if (this.dbState.sponsors && this.dbState.sponsors[tier]) {
+      this.dbState.sponsors[tier] = this.dbState.sponsors[tier].filter(s => s.name !== decodedName);
+      this.persistOffline();
+      this.renderConfig();
     }
   }
 };

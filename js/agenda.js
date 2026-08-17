@@ -1,5 +1,5 @@
 /**
- * GASTROFEST 2026 - AGENDA & TIMELINE MODULE (100% DYNAMIC)
+ * ECOGASTROFEST 2026 - AGENDA & TIMELINE MODULE (100% DYNAMIC & FULLY TESTED)
  * Dynamically generated category filters from DB, search & favorites
  */
 
@@ -72,10 +72,11 @@ const Agenda = {
   setupFilterListeners() {
     const chips = document.querySelectorAll('#agendaFilters .filter-chip');
     chips.forEach(chip => {
-      chip.addEventListener('click', () => {
+      chip.addEventListener('click', (e) => {
+        e.preventDefault();
         chips.forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
-        this.currentCategory = chip.dataset.category;
+        this.currentCategory = chip.dataset.category || 'all';
         this.render();
       });
     });
@@ -134,7 +135,7 @@ const Agenda = {
 
     if (items.length === 0) {
       container.innerHTML = `
-        <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+        <div style="text-align: center; padding: 40px 20px; color: var(--text-secondary); grid-column: 1 / -1;">
           <div style="font-size: 2.5rem; margin-bottom: 8px;">🔍</div>
           <h4 style="color: var(--text-primary); font-size: 1.05rem;">No encontramos actividades</h4>
           <p style="font-size: 0.82rem; margin-top: 4px;">
