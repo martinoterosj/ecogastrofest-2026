@@ -248,15 +248,68 @@ app.get('/api/raffle/participants', (req, res) => {
   res.json(getDB().participants);
 });
 
-app.get('/api/raffle/export', (req, res) => {
+// =============================================================================
+// 8. ZONES & MAP COORDINATES CRUD
+// =============================================================================
+app.get('/api/zones', (req, res) => {
+  res.json(getDB().zones || []);
+});
+
+app.post('/api/zones', (req, res) => {
   const db = getDB();
-  let csv = 'Codigo,Nombre,Telefono,Stand_Favorito,Hora_Registro\r\n';
-  db.participants.forEach(p => {
-    csv += `${p.code},"${p.name}","${p.phone}","${p.stand}",${p.issuedAt}\r\n`;
-  });
-  res.setHeader('Content-Type', 'text/csv');
-  res.setHeader('Content-Disposition', 'attachment; filename=gastrofest_participantes.csv');
-  res.send(csv);
+  if (!db.zones) db.zones = [];
+  const newZone = {
+    id: `zone-${Math.floor(100 + Math.random() * 900)}`,
+    code: req.body.code || 'ZONA NUEVA',
+    name: req.body.name || 'Nueva Zona',
+    category: req.body.category || 'General',
+    icon: req.body.icon || '📍',
+    color: req.body.color || '#10b981',
+    x: Number(req.body.x) || 50,
+    y: Number(req.body.y) || 50,
+    description: req.body.description || ''
+  };
+  db.zones.push(newZone);
+  saveDB(db);
+  res.json({ success: true, zone: newZone });
+});
+
+app.put('/api/zones/:id', (req, res) => {
+  const db = getDB();
+  if (!db.zones) db.zones = [];
+  const zone = db.zones.find(z => z.id === req.params.id);
+  if (zone) {
+    if (req.body.code !== undefined) zone.code = req.body.code;
+    if (req.body.name !== undefined) zone.name = req.body.name;
+    if (req.body.category !== undefined) zone.category = req.body.category;
+    if (req.body.icon !== undefined) zone.icon = req.body.icon;
+    if (req.body.color !== undefined) zone.color = req.body.color;
+    if (req.body.x !== undefined) zone.x = Number(req.body.x);
+    if (req.body.y !== undefined) zone.y = Number(req.body.y);
+    if (req.body.description !== undefined) zone.description = req.body.description;
+    saveDB(db);
+    res.json({ success: true, zone });
+  } else {
+    res.status(404).json({ success: false, message: 'Zona no encontrada' });
+  }
+});
+
+app.delete('/api/zones/:id', (req, res) => {
+  const db = getDB();
+  if (!db.zones) db.zones = [];
+  db.zones = db.zones.filter(z => z.id !== req.params.id);
+  saveDB(db);
+  res.json({ success: true, message: 'Zona eliminada' });
+});
+
+// =============================================================================
+// 9. CONFIG & EVENT INFO
+// =============================================================================
+app.put('/api/config/event', (req, res) => {
+  const db = getDB();
+  db.event = Object.assign(db.event || {}, req.body);
+  saveDB(db);
+  res.json({ success: true, event: db.event });
 });
 
 app.listen(PORT, () => {

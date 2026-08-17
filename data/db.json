@@ -1,18 +1,18 @@
 {
   "event": {
-    "name": "GastroFest Internacional 2026",
-    "edition": "Gran Edici�n Gourmet",
+    "name": "EcoGastroFest 2026",
+    "edition": "Feria Gastronómica Sustentable de San José de Mayo",
     "date": "Sábado 17 de Octubre, 2026",
-    "hours": "10:00 a 00:00 hs",
-    "venue": "Predio Central Gourmet",
-    "address": "Av. Las Palmeras & Del Sol, Sector Eco A",
-    "mapsUrl": "https://maps.google.com/?q=Parque+Central+Gastronomia",
-    "wazeUrl": "https://waze.com/ul?q=Parque+Central+Gastronomia",
-    "phone": "+54 9 11 5555-4321",
-    "instagram": "@ecogastrofest.oficial",
-    "parkingInfo": "Estacionamiento para autos híbridos/eléctricos y bicicletas gratis. Vehículos convencionales $2.000 (100% donado a reforestación).",
-    "paymentInfo": "Pagos 100% Digitales sin papel (QR, contactless y billeteras virtuales).",
-    "firstAidInfo": "Punto Verde Central y Puesto de Asistencia Ecológica y Médica."
+    "hours": "11:00 a 23:45 hs",
+    "venue": "Plaza Independencia - San José de Mayo",
+    "address": "Plaza de los Treinta y Tres / Independencia, San José de Mayo, Uruguay",
+    "mapsUrl": "https://maps.google.com/?q=Plaza+Independencia+San+Jose+de+Mayo+Uruguay",
+    "wazeUrl": "https://waze.com/ul?q=Plaza+Independencia+San+Jose+de+Mayo+Uruguay",
+    "phone": "+598 99 123 456",
+    "instagram": "@ecogastrofest.sanjose",
+    "parkingInfo": "Estacionamiento libre y señalizado en el perímetro de la Plaza (Calles 25 de Mayo, 18 de Julio, Asamblea y Artigas). Espacio preferencial para bicicletas.",
+    "paymentInfo": "Pagos 100% digitales (QR, tarjetas, transferencias) y efectivo en todos los stands.",
+    "firstAidInfo": "Puesto de Primeros Auxilios, Asistencia Médica y Punto Verde junto al monumento central."
   },
   "showCategories": [
     {
@@ -76,49 +76,102 @@
   "stages": [
     {
       "id": "main",
-      "name": "Escenario Tierra & Brasas",
-      "icon": "🔥"
+      "name": "Escenario Principal Solís",
+      "icon": "🎸"
     },
     {
       "id": "domo",
-      "name": "Domo Biodinámico & Catas",
+      "name": "Domo Gourmet & Catas",
       "icon": "🍷"
     },
     {
       "id": "acustico",
       "name": "Patio Acústico Solar",
-      "icon": "🎸"
+      "icon": "🎤"
     },
     {
       "id": "kids",
-      "name": "Espacio Semillitas & Mini Chefs",
+      "name": "Espacio Candombe & Talleres",
       "icon": "🪴"
     }
   ],
   "zones": [
     {
-      "code": "ZONA A",
-      "name": "🥩 Pastura Regenerativa"
+      "id": "zone-solis",
+      "code": "ESCENARIO SOLÍS",
+      "name": "🎸 Escenario Principal Solís",
+      "category": "Escenario Principal",
+      "icon": "🎸",
+      "color": "#ef4444",
+      "x": 50,
+      "y": 15,
+      "description": "Escenario principal de recitales, shows estelares y actos centrales (Norte)."
     },
     {
-      "code": "ZONA B",
-      "name": "🍔 Burgers Artesanales"
+      "id": "zone-brasas",
+      "code": "ZONA BRASAS",
+      "name": "🥩 Pastura Regenerativa & Asados",
+      "category": "Gastronomía",
+      "icon": "🥩",
+      "color": "#f97316",
+      "x": 78,
+      "y": 42,
+      "description": "Parrillas criollas a la leña de poda y cortes de libre pastoreo (Este)."
     },
     {
+      "id": "zone-cerveza",
+      "code": "PATIO CERVECERO",
+      "name": "🍺 Patio Cervecero & Eco-Vasos",
+      "category": "Bebidas",
+      "icon": "🍺",
+      "color": "#f59e0b",
+      "x": 74,
+      "y": 78,
+      "description": "Cervezas artesanales uruguayas y eco-vasos retornables (Sureste)."
+    },
+    {
+      "id": "zone-acustico",
+      "code": "PATIO ACÚSTICO",
+      "name": "🎤 Patio Acústico Solar",
+      "category": "Escenario Acústico",
+      "icon": "🎤",
+      "color": "#8b5cf6",
+      "x": 26,
+      "y": 78,
+      "description": "Sesiones íntimas desenchufadas con energía solar (Suroeste)."
+    },
+    {
+      "id": "zone-verde",
       "code": "ZONA VERDE",
-      "name": "🌱 100% Plant Based & Sin TACC"
+      "name": "🌱 100% Plant Based & Orgánico",
+      "category": "Gastronomía Saludable",
+      "icon": "🌱",
+      "color": "#10b981",
+      "x": 22,
+      "y": 42,
+      "description": "Alimentos agroecológicos, opciones veganas y sin TACC (Oeste)."
     },
     {
-      "code": "ZONA C",
-      "name": "🍺 Patio Cervecero Eco-Vasos"
+      "id": "zone-obelisco",
+      "code": "PUNTO CENTRAL",
+      "name": "🏛️ Monumento Central & Punto Verde",
+      "category": "Informes & Ecología",
+      "icon": "🏛️",
+      "color": "#3b82f6",
+      "x": 50,
+      "y": 50,
+      "description": "Monumento de la Plaza, centro de reciclaje, primeros auxilios e informes."
     },
     {
-      "code": "ZONA D",
-      "name": "🥢 Street Food Km 0"
-    },
-    {
-      "code": "PUNTO VERDE",
-      "name": "♻️ Centro de Compostaje & Reciclaje"
+      "id": "zone-domo",
+      "code": "DOMO GOURMET",
+      "name": "🍷 Domo Gourmet & Catas",
+      "category": "Catas & Masterclass",
+      "icon": "🍷",
+      "color": "#ec4899",
+      "x": 48,
+      "y": 32,
+      "description": "Catas de vinos Tannat, maridaje de quesos y talleres gastronómicos."
     }
   ],
   "sponsors": {

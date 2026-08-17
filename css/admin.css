@@ -232,7 +232,7 @@ body.admin-body {
    ========================================================================== */
 .admin-tabs-nav {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 4px;
   background: var(--admin-card);
   padding: 6px;
@@ -684,5 +684,259 @@ input:checked + .slider:before {
   .responsive-sponsor-form {
     grid-template-columns: 90px 1fr 1fr 1fr 100px;
   }
+}
+
+/* ==========================================================================
+   10. INTERACTIVE MAP & ZONE MARKER TOOL (PLAZA INDEPENDENCIA)
+   ========================================================================== */
+.admin-map-editor-wrapper {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+@media (min-width: 860px) {
+  .admin-map-editor-wrapper {
+    grid-template-columns: 1.15fr 0.85fr;
+  }
+}
+
+.admin-satellite-map-card {
+  background: var(--admin-card-inner);
+  border: 1px solid var(--admin-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-satellite-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-satellite-map {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 2px solid rgba(52, 211, 153, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  cursor: crosshair;
+  background: #0b1510;
+  user-select: none;
+}
+
+.admin-satellite-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  pointer-events: none;
+}
+
+.admin-map-pins-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Pins on Map */
+.map-zone-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), z-index 0.2s;
+  z-index: 10;
+}
+
+.map-zone-pin:hover, .map-zone-pin.is-selected {
+  transform: translate(-50%, -50%) scale(1.18);
+  z-index: 25;
+}
+
+.map-zone-pin-head {
+  width: 32px;
+  height: 32px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), 0 0 12px var(--pin-color);
+  border: 2px solid #ffffff;
+  transition: all 0.2s;
+}
+
+.map-zone-pin-head span {
+  transform: rotate(45deg);
+  font-size: 0.95rem;
+}
+
+.map-zone-pin-badge {
+  background: rgba(7, 17, 12, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--pin-color);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  margin-top: 4px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+}
+
+/* Crosshair click marker */
+.map-crosshair-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  z-index: 30;
+  animation: pulseCrosshair 1s infinite alternate;
+}
+
+@keyframes pulseCrosshair {
+  from { transform: translate(-50%, -50%) scale(1); }
+  to { transform: translate(-50%, -50%) scale(1.15); }
+}
+
+.crosshair-icon {
+  font-size: 1.8rem;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.8));
+}
+
+.crosshair-badge {
+  background: #f59e0b;
+  color: black;
+  font-weight: 900;
+  font-size: 0.68rem;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+/* Zone Form Card */
+.admin-zone-form-card {
+  background: var(--admin-card-inner);
+  border: 1px solid var(--admin-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Zones Cards Grid */
+.admin-zones-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+@media (min-width: 600px) {
+  .admin-zones-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .admin-zones-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.admin-zone-card {
+  background: var(--admin-card-inner);
+  border: 1px solid var(--admin-border-subtle);
+  border-left: 4px solid var(--zone-color, #10b981);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.admin-zone-card:hover, .admin-zone-card.is-editing {
+  border-color: var(--zone-color, #10b981);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.admin-zone-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.admin-zone-card-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-zone-icon-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  border: 1px solid;
+  flex-shrink: 0;
+}
+
+.admin-zone-code-tag {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  display: inline-block;
+  margin-top: 2px;
+}
+
+.admin-zone-coords-pill {
+  font-size: 0.68rem;
+  font-family: monospace;
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.admin-zone-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+  margin: 0;
+}
+
+.admin-zone-actions-bar {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 8px;
+  margin-top: 2px;
 }
 

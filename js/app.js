@@ -68,6 +68,8 @@ const App = {
     this.playBeep(800, 0.03);
   },
 
+  selectedZoneId: null,
+
   renderDynamicEventInfo() {
     if (!GASTRO_DATA.event) return;
     const ev = GASTRO_DATA.event;
@@ -85,8 +87,8 @@ const App = {
     }
 
     // Directions Links
-    const gmapsBtn = document.querySelector('.btn-gmaps');
-    const wazeBtn = document.querySelector('.btn-waze');
+    const gmapsBtn = document.getElementById('venueMapsBtn') || document.querySelector('.btn-gmaps');
+    const wazeBtn = document.getElementById('venueWazeBtn') || document.querySelector('.btn-waze');
     if (gmapsBtn && ev.mapsUrl) gmapsBtn.href = ev.mapsUrl;
     if (wazeBtn && ev.wazeUrl) wazeBtn.href = ev.wazeUrl;
 
@@ -98,16 +100,151 @@ const App = {
     if (paymentEl && ev.paymentInfo) paymentEl.textContent = ev.paymentInfo;
     if (firstAidEl && ev.firstAidInfo) firstAidEl.textContent = ev.firstAidInfo;
 
+    // Render Satellite Map Pins & Zone Selector
+    this.renderVisitorMap();
+
     // Venue Schematic Zones
     const zonesContainer = document.getElementById('mapZonesGrid');
     if (zonesContainer && GASTRO_DATA.zones) {
-      zonesContainer.innerHTML = GASTRO_DATA.zones.map(z => `
-        <div class="map-zone-pill">
-          <span class="zone-code">${z.code}</span>
-          <span class="zone-name">${z.name}</span>
-        </div>
-      `).join('');
+      zonesContainer.innerHTML = GASTRO_DATA.zones.map(z => {
+        const isSelected = this.selectedZoneId === z.id;
+        const color = z.color || '#10b981';
+        return `
+          <button class="map-zone-pill ${isSelected ? 'active' : ''}" 
+                  style="--zone-pill-color: ${color};" 
+                  onclick="App.selectVisitorZone('${z.id}')">
+            <span class="zone-code" style="color:${color};">${z.icon || '📍'} ${z.code}</span>
+            <span class="zone-name">${z.name}</span>
+          </button>
+        `;
+      }).join('');
     }
+  },
+
+  renderVisitorMap() {
+    const pinsLayer = document.getElementById('visitorMapPinsLayer');
+    if (!pinsLayer || !GASTRO_DATA.zones) return;
+
+    pinsLayer.innerHTML = GASTRO_DATA.zones.map(z => {
+      const isSelected = this.selectedZoneId === z.id;
+      const color = z.color || '#10b981';
+      return `
+        <div class="visitor-map-pin ${isSelected ? 'is-active' : ''}" 
+             style="left: ${z.x}%; top: ${z.y}%; --pin-color: ${color};" 
+             onclick="App.selectVisitorZone('${z.id}')"
+             title="${z.code}: ${z.name}">
+          <div class="visitor-pin-head" style="background: ${color};">
+            <span>${z.icon || '📍'}</span>
+          </div>
+          <div class="visitor-pin-label" style="border-color: ${color};">
+            ${z.code}
+          </div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  selectVisitorZone(zoneId) {
+    if (!GASTRO_DATA.zones) return;
+    const zone = GASTRO_DATA.zones.find(z => z.id === zoneId);
+    if (!zone) return;
+
+    this.selectedZoneId = zoneId;
+    this.renderVisitorMap();
+
+    // Update active pill
+    const pills = document.querySelectorAll('.map-zone-pill');
+    pills.forEach(p => p.classList.remove('active'));
+
+    const detailBox = document.getElementById('visitorZoneDetailBox');
+    if (!detailBox) return;
+
+    const color = zone.color || '#10b981';
+    
+    // Find stands matching this zone code/name
+    const matchingStands = (GASTRO_DATA.stands || []).filter(st => 
+      (st.zone && (st.zone.toLowerCase().includes(zone.code.toLowerCase()) || zone.name.toLowerCase().includes(st.zone.toLowerCase())))
+    );
+
+    // Find shows on this stage if it's a stage zone
+    const matchingShows = (GASTRO_DATA.schedule || []).filter(ev => 
+      (ev.stageName && (ev.stageName.toLowerCase().includes(zone.name.toLowerCase()) || zone.name.toLowerCase().includes(ev.stageName.toLowerCase())))
+    );
+
+    detailBox.innerHTML = `
+      <div class="zone-detail-card" style="border-left-color: ${color};">
+        <div class="zone-detail-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="zone-detail-icon" style="background: ${color}25; border-color: ${color}; color: ${color};">
+              ${zone.icon || '📍'}
+            </span>
+            <div>
+              <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 800; color: #ffffff; margin: 0;">
+                ${zone.name}
+              </h4>
+              <span style="font-size: 0.7rem; font-weight: 800; color: ${color}; text-transform: uppercase;">
+                ${zone.code} ${zone.category ? `• ${zone.category}` : ''}
+              </span>
+            </div>
+          </div>
+          <button class="btn-close-zone-detail" onclick="App.closeVisitorZoneDetail()" aria-label="Cerrar">✕</button>
+        </div>
+
+        <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4; margin: 8px 0;">
+          ${zone.description || 'Sector oficial de Plaza Independencia acondicionado para el festival.'}
+        </p>
+
+        ${matchingStands.length > 0 ? `
+          <div style="margin-top: 6px;">
+            <span style="font-size: 0.72rem; font-weight: 800; color: #a7d0ba; text-transform: uppercase;">
+              🍴 Puestos en este sector (${matchingStands.length}):
+            </span>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px;">
+              ${matchingStands.map(st => `
+                <button type="button" class="zone-stand-chip" onclick="App.navigateToStand('${st.id}')">
+                  ${st.number} - ${st.name} ➔
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        ${matchingShows.length > 0 ? `
+          <div style="margin-top: 8px;">
+            <span style="font-size: 0.72rem; font-weight: 800; color: #fde68a; text-transform: uppercase;">
+              🎤 Próximos Shows en esta Zona (${matchingShows.length}):
+            </span>
+            <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px;">
+              ${matchingShows.slice(0, 2).map(ev => `
+                <div style="font-size: 0.78rem; color: var(--text-primary); display:flex; justify-content:space-between; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: var(--radius-sm);">
+                  <span>${ev.speakerAvatar || '👨‍🍳'} <strong>${ev.title}</strong></span>
+                  <span style="color: var(--color-gold); font-weight: 700;">🕒 ${ev.startTime}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    detailBox.style.display = 'block';
+    if (detailBox.scrollIntoView) {
+      detailBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  },
+
+  closeVisitorZoneDetail() {
+    this.selectedZoneId = null;
+    this.renderVisitorMap();
+    const detailBox = document.getElementById('visitorZoneDetailBox');
+    if (detailBox) detailBox.style.display = 'none';
+  },
+
+  navigateToStand(standId) {
+    this.switchTab('stands');
+    setTimeout(() => {
+      if (window.Stands) Stands.openStandModal(standId);
+    }, 150);
   },
 
   renderSponsors() {

@@ -145,9 +145,24 @@ async function testVisitorApp() {
   assert(Raffle.currentTicket !== null, `Formulario genera Ticket Digital con código único (#${Raffle.currentTicket?.code})`);
   assert(document.getElementById('raffleTicketSection').style.display === 'block', `Sección de Golden Ticket visualizada con éxito`);
 
-  // Test Ticket Copy & Draw QR
+  // Test Ticket Copy
   Raffle.copyTicketCode();
   assert(Raffle.currentTicket.name === 'Martín Tester', `Datos de titular y stand del ticket validados`);
+
+  // 6. Test Visitor Interactive Satellite Map & Zone Pins
+  console.log('\n6. Probando Mapa Satelital Interactivo de Plaza Independencia (Visitantes):');
+  assert(document.getElementById('visitorSatelliteMap') !== null, `Mapa satelital de Plaza Independencia presente en tab Info`);
+  App.renderVisitorMap();
+  const visitorPins = document.querySelectorAll('.visitor-map-pin');
+  assert(visitorPins.length > 0, `Puntos de zonas marcados sobre el mapa satelital (${visitorPins.length} zonas)`);
+
+  // Click on a zone pin to open Zone Details
+  const firstZone = GASTRO_DATA.zones[0];
+  App.selectVisitorZone(firstZone.id);
+  const detailBox = document.getElementById('visitorZoneDetailBox');
+  assert(detailBox.style.display === 'block', `Click en pin de zona abre ficha informativa con stands y shows`);
+  App.closeVisitorZoneDetail();
+  assert(detailBox.style.display === 'none', `Cerrar ficha informativa de zona funciona correctamente`);
 }
 
 async function testAdminApp() {
@@ -181,17 +196,46 @@ async function testAdminApp() {
   assert(AdminApp.currentUser !== null, `Login con PIN 1234 inicia sesión como Operador`);
   assert(document.getElementById('adminDashboardSection').style.display === 'flex', `Dashboard de Operadores visualizado`);
 
-  // 2. Test Admin Tabs
+  // 2. Test Admin Tabs (including map-zones)
   console.log('\n2. Probando Pestañas del Panel de Control:');
-  const adminTabs = ['schedule', 'stands', 'announcements', 'raffle', 'config'];
+  const adminTabs = ['schedule', 'stands', 'map-zones', 'announcements', 'raffle', 'config'];
   adminTabs.forEach(t => {
     const btn = document.querySelector(`.admin-tab-btn[data-tab="${t}"]`);
     if (btn) btn.click();
     assert(AdminApp.currentTab === t, `Pestaña Admin '${t}' activada con éxito`);
   });
 
-  // 3. Test Schedule Management
-  console.log('\n3. Probando Acciones de Shows (En Vivo, Retraso, Finalizar):');
+  // 3. Test Interactive Map & Zone Marker Tool
+  console.log('\n3. Probando Editor de Zonas en Mapa Satelital (Admin):');
+  assert(document.getElementById('adminSatelliteMap') !== null, `Canvas del mapa satelital presente para marcado`);
+  
+  // Test click on map
+  AdminApp.handleMapClick({
+    clientX: 150,
+    clientY: 100
+  });
+  assert(document.getElementById('zoneXInput').value !== '', `Click en mapa captura coordenada X%`);
+  assert(document.getElementById('zoneYInput').value !== '', `Click en mapa captura coordenada Y%`);
+
+  // Test creating a new zone
+  document.getElementById('zoneCodeInput').value = 'ZONA TEST';
+  document.getElementById('zoneNameInput').value = 'Sector Degustación';
+  document.getElementById('zoneCategoryInput').value = 'Catas';
+  document.getElementById('zoneColorInput').value = '#ec4899';
+  document.getElementById('zoneXInput').value = '65';
+  document.getElementById('zoneYInput').value = '40';
+  await AdminApp.saveZone({ preventDefault: () => {} });
+
+  const addedZone = AdminApp.dbState.zones.find(z => z.code === 'ZONA TEST');
+  assert(addedZone !== undefined, `Nueva zona guardada y marcada en el mapa con coordenadas y color`);
+
+  if (addedZone) {
+    await AdminApp.deleteZone(addedZone.id);
+    assert(!AdminApp.dbState.zones.some(z => z.id === addedZone.id), `Zona eliminada correctamente del mapa`);
+  }
+
+  // 4. Test Schedule Management
+  console.log('\n4. Probando Acciones de Shows (En Vivo, Retraso, Finalizar):');
   const firstShow = AdminApp.dbState.schedule[0];
   await AdminApp.updateEventStatus(firstShow.id, 'live');
   assert(firstShow.status === 'live', `Botón '🔴 En Vivo' actualiza estado del show a 'live'`);
@@ -199,8 +243,8 @@ async function testAdminApp() {
   await AdminApp.adjustTime(firstShow.id, 15);
   assert(firstShow.status === 'delayed', `Botón '⏰ +15m Retraso' marca el show con estado retrasado`);
 
-  // 4. Test Stock Toggle
-  console.log('\n4. Probando Control de Stock de Platos:');
+  // 5. Test Stock Toggle
+  console.log('\n5. Probando Control de Stock de Platos:');
   const firstStand = AdminApp.dbState.stands[0];
   const firstDish = firstStand.menu[0];
   await AdminApp.toggleStock(firstStand.id, firstDish.item, true);
@@ -209,8 +253,8 @@ async function testAdminApp() {
   await AdminApp.toggleStock(firstStand.id, firstDish.item, false);
   assert(firstDish.isSoldOut === false, `Switch de Stock reactiva '${firstDish.item}' como DISPONIBLE`);
 
-  // 5. Test Flash Announcements
-  console.log('\n5. Probando Creación y Eliminación de Avisos Flash:');
+  // 6. Test Flash Announcements
+  console.log('\n6. Probando Creación y Eliminación de Avisos Flash:');
   document.getElementById('annTitle').value = 'Test Aviso Flash';
   document.getElementById('annMessage').value = 'Mensaje de prueba en vivo';
   await AdminApp.postAnnouncement({ preventDefault: () => {} });
@@ -223,8 +267,8 @@ async function testAdminApp() {
     assert(!AdminApp.dbState.announcements.some(a => a.id === createdAnn.id), `Botón 'Eliminar Aviso' borra el aviso flash`);
   }
 
-  // 6. Test Shows CRUD Modal (Alta, Modificación y Baja)
-  console.log('\n6. Probando Alta y Modificación de Shows en Vivo:');
+  // 7. Test Shows CRUD Modal (Alta, Modificación y Baja)
+  console.log('\n7. Probando Alta y Modificación de Shows en Vivo:');
   AdminApp.openNewShowModal();
   const showModal = document.getElementById('modalShowOverlay');
   assert(showModal && showModal.classList.contains('active'), `Modal 'Alta de Nuevo Show' se abre correctamente`);
@@ -244,8 +288,8 @@ async function testAdminApp() {
     assert(!AdminApp.dbState.schedule.some(s => s.id === addedShow.id), `Show eliminado correctamente`);
   }
 
-  // 7. Test Categories & Config Management
-  console.log('\n7. Probando Categorías y Ajustes Generales del Evento:');
+  // 8. Test Categories & Config Management
+  console.log('\n8. Probando Categorías y Ajustes Generales del Evento:');
   document.getElementById('newShowCatName').value = 'Magia & Humor';
   document.getElementById('newShowCatIcon').value = '🎩';
   await AdminApp.addCategory({ preventDefault: () => {} }, 'show');
@@ -262,8 +306,8 @@ async function testAdminApp() {
   await AdminApp.saveEventConfig({ preventDefault: () => {} });
   assert(AdminApp.dbState.event.name === 'EcoGastroFest 2026', `Configuración general del evento actualizada`);
 
-  // 8. Test UI Responsive Layout Elements
-  console.log('\n8. Validando Estructuras Responsivas de la UI:');
+  // 9. Test UI Responsive Layout Elements
+  console.log('\n9. Validando Estructuras Responsivas de la UI:');
   assert(document.querySelector('.admin-navbar-actions') !== null, `Navbar de administración contiene contenedor de acciones responsivas`);
   assert(document.querySelector('.admin-tabs-nav') !== null, `Barra de pestañas adaptativa presente`);
   assert(document.querySelectorAll('.card-row-top').length > 0, `Cards de shows y stands renderizan encabezados flexibles (.card-row-top)`);

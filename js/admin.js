@@ -158,6 +158,7 @@ const AdminApp = {
     if (this.dbState) {
       this.renderSchedule();
       this.renderStands();
+      this.renderMapEditor();
       this.renderAnnouncements();
       this.renderRaffle();
       this.renderConfig();
@@ -764,7 +765,245 @@ const AdminApp = {
   },
 
   // =========================================================================
-  // 3. ANNOUNCEMENTS CRUD
+  // 3. INTERACTIVE MAP & ZONE MARKER TOOL (PLAZA INDEPENDENCIA)
+  // =========================================================================
+  renderMapEditor() {
+    if (!this.dbState) return;
+    if (!this.dbState.zones) {
+      this.dbState.zones = window.GASTRO_DATA && GASTRO_DATA.zones ? JSON.parse(JSON.stringify(GASTRO_DATA.zones)) : [];
+    }
+
+    const countEl = document.getElementById('adminZoneCount');
+    if (countEl) countEl.textContent = this.dbState.zones.length;
+
+    // Render Pins on Map Image
+    const pinsContainer = document.getElementById('adminMapPinsContainer');
+    if (pinsContainer) {
+      pinsContainer.innerHTML = this.dbState.zones.map(z => {
+        const isSelected = this.editingZoneId === z.id;
+        const color = z.color || '#10b981';
+        return `
+          <div class="map-zone-pin ${isSelected ? 'is-selected' : ''}" 
+               style="left: ${z.x}%; top: ${z.y}%; --pin-color: ${color};" 
+               onclick="event.stopPropagation(); AdminApp.selectZoneForEdit('${z.id}')"
+               title="${z.code}: ${z.name}">
+            <div class="map-zone-pin-head" style="background: ${color};">
+              <span>${z.icon || '📍'}</span>
+            </div>
+            <div class="map-zone-pin-badge" style="border-color: ${color};">
+              ${z.code}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Render Cards in Grid Below
+    const listGrid = document.getElementById('adminZonesListGrid');
+    if (listGrid) {
+      if (this.dbState.zones.length === 0) {
+        listGrid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--text-secondary);">
+            📍 Aún no hay zonas marcadas en el mapa. Haz clic en el mapa satelital para ubicar la primera.
+          </div>
+        `;
+        return;
+      }
+
+      listGrid.innerHTML = this.dbState.zones.map(z => {
+        const isSelected = this.editingZoneId === z.id;
+        const color = z.color || '#10b981';
+        return `
+          <div class="admin-zone-card ${isSelected ? 'is-editing' : ''}" style="--zone-color: ${color};">
+            <div class="admin-zone-card-top">
+              <div class="admin-zone-card-identity">
+                <span class="admin-zone-icon-circle" style="background: ${color}25; border-color: ${color}; color: ${color};">
+                  ${z.icon || '📍'}
+                </span>
+                <div>
+                  <h4 style="color: white; margin: 0; font-size: 0.95rem;">${z.name}</h4>
+                  <span class="admin-zone-code-tag" style="background: ${color}20; color: ${color}; border-color: ${color}60;">
+                    ${z.code} ${z.category ? `• ${z.category}` : ''}
+                  </span>
+                </div>
+              </div>
+              <div class="admin-zone-coords-pill">
+                X: ${z.x}% | Y: ${z.y}%
+              </div>
+            </div>
+
+            ${z.description ? `<p class="admin-zone-desc">${z.description}</p>` : ''}
+
+            <div class="admin-zone-actions-bar">
+              <button class="btn-admin-action" onclick="AdminApp.selectZoneForEdit('${z.id}')" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd;">
+                ✏️ Editar / Mover
+              </button>
+              <button class="btn-admin-action btn-danger" onclick="AdminApp.deleteZone('${z.id}')">
+                🗑️ Eliminar
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  },
+
+  handleMapClick(event) {
+    const mapEl = document.getElementById('adminSatelliteMap');
+    if (!mapEl) return;
+
+    const rect = mapEl.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const clickY = event.clientY - rect.top;
+
+    const xPercent = Math.max(0, Math.min(100, Math.round((clickX / rect.width) * 100)));
+    const yPercent = Math.max(0, Math.min(100, Math.round((clickY / rect.height) * 100)));
+
+    document.getElementById('zoneXInput').value = xPercent;
+    document.getElementById('zoneYInput').value = yPercent;
+
+    const crosshair = document.getElementById('adminCrosshairPin');
+    const coordsBadge = document.getElementById('adminCrosshairCoords');
+    if (crosshair) {
+      crosshair.style.display = 'flex';
+      crosshair.style.left = `${xPercent}%`;
+      crosshair.style.top = `${yPercent}%`;
+      if (coordsBadge) coordsBadge.textContent = `${xPercent}%, ${yPercent}%`;
+    }
+  },
+
+  updatePreviewPin() {
+    const x = Number(document.getElementById('zoneXInput').value) || 50;
+    const y = Number(document.getElementById('zoneYInput').value) || 50;
+
+    const crosshair = document.getElementById('adminCrosshairPin');
+    const coordsBadge = document.getElementById('adminCrosshairCoords');
+    if (crosshair) {
+      crosshair.style.display = 'flex';
+      crosshair.style.left = `${x}%`;
+      crosshair.style.top = `${y}%`;
+      if (coordsBadge) coordsBadge.textContent = `${x}%, ${y}%`;
+    }
+  },
+
+  selectZoneForEdit(id) {
+    if (!this.dbState || !this.dbState.zones) return;
+    const zone = this.dbState.zones.find(z => z.id === id);
+    if (!zone) return;
+
+    this.editingZoneId = id;
+    document.getElementById('zoneFormHeading').textContent = `✏️ Modificar Zona: ${zone.code}`;
+    document.getElementById('zoneIdInput').value = zone.id;
+    document.getElementById('zoneCodeInput').value = zone.code || '';
+    document.getElementById('zoneNameInput').value = zone.name || '';
+    document.getElementById('zoneCategoryInput').value = zone.category || '';
+    document.getElementById('zoneIconInput').value = zone.icon || '📍';
+    document.getElementById('zoneColorInput').value = zone.color || '#10b981';
+    document.getElementById('zoneColorHex').textContent = zone.color || '#10b981';
+    document.getElementById('zoneXInput').value = zone.x !== undefined ? zone.x : 50;
+    document.getElementById('zoneYInput').value = zone.y !== undefined ? zone.y : 50;
+    document.getElementById('zoneDescInput').value = zone.description || '';
+
+    this.updatePreviewPin();
+    this.renderMapEditor();
+  },
+
+  resetZoneForm() {
+    this.editingZoneId = null;
+    document.getElementById('zoneFormHeading').textContent = '➕ Crear / Modificar Zona';
+    document.getElementById('zoneIdInput').value = '';
+    document.getElementById('zoneCodeInput').value = '';
+    document.getElementById('zoneNameInput').value = '';
+    document.getElementById('zoneCategoryInput').value = '';
+    document.getElementById('zoneIconInput').value = '📍';
+    document.getElementById('zoneColorInput').value = '#10b981';
+    document.getElementById('zoneColorHex').textContent = '#10b981';
+    document.getElementById('zoneXInput').value = '50';
+    document.getElementById('zoneYInput').value = '50';
+    document.getElementById('zoneDescInput').value = '';
+
+    const crosshair = document.getElementById('adminCrosshairPin');
+    if (crosshair) crosshair.style.display = 'none';
+
+    this.renderMapEditor();
+  },
+
+  async saveZone(e) {
+    if (e && e.preventDefault) e.preventDefault();
+
+    const id = document.getElementById('zoneIdInput').value || this.editingZoneId;
+    const payload = {
+      code: document.getElementById('zoneCodeInput').value.trim().toUpperCase(),
+      name: document.getElementById('zoneNameInput').value.trim(),
+      category: document.getElementById('zoneCategoryInput').value.trim() || 'General',
+      icon: document.getElementById('zoneIconInput').value.trim() || '📍',
+      color: document.getElementById('zoneColorInput').value || '#10b981',
+      x: Number(document.getElementById('zoneXInput').value) || 50,
+      y: Number(document.getElementById('zoneYInput').value) || 50,
+      description: document.getElementById('zoneDescInput').value.trim()
+    };
+
+    if (!payload.code || !payload.name) {
+      alert('Por favor completa el código y nombre de la zona');
+      return;
+    }
+
+    try {
+      const url = id ? `./api/zones/${id}` : './api/zones';
+      const method = id ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (id) {
+          const idx = this.dbState.zones.findIndex(z => z.id === id);
+          if (idx > -1) this.dbState.zones[idx] = data.zone || Object.assign(this.dbState.zones[idx], payload);
+        } else {
+          this.dbState.zones.push(data.zone || { id: `zone-${Date.now()}`, ...payload });
+        }
+      } else {
+        throw new Error('Fallback offline save');
+      }
+    } catch (err) {
+      if (!this.dbState.zones) this.dbState.zones = [];
+      if (id) {
+        const idx = this.dbState.zones.findIndex(z => z.id === id);
+        if (idx > -1) Object.assign(this.dbState.zones[idx], payload);
+      } else {
+        this.dbState.zones.push({
+          id: `zone-${Math.floor(100 + Math.random() * 900)}`,
+          ...payload
+        });
+      }
+    }
+
+    this.persistOffline();
+    this.resetZoneForm();
+    alert('✅ ¡Zona guardada exitosamente en el mapa de Plaza Independencia!');
+  },
+
+  async deleteZone(id) {
+    if (!confirm('¿Seguro que deseas eliminar esta zona del mapa?')) return;
+
+    try {
+      await fetch(`./api/zones/${id}`, { method: 'DELETE' });
+    } catch (e) {}
+
+    if (this.dbState && this.dbState.zones) {
+      this.dbState.zones = this.dbState.zones.filter(z => z.id !== id);
+    }
+    this.persistOffline();
+    if (this.editingZoneId === id) this.resetZoneForm();
+    else this.renderMapEditor();
+  },
+
+  // =========================================================================
+  // 4. ANNOUNCEMENTS CRUD
   // =========================================================================
   renderAnnouncements() {
     const list = document.getElementById('adminAnnouncementsList');

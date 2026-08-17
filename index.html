@@ -327,24 +327,52 @@
           <h2 class="section-title">
             <span>Ubicación & Accesos</span>
           </h2>
-          <p class="section-subtitle" id="venueAddressText">Parque Central - Predio Ferial Gourmet</p>
+          <p class="section-subtitle" id="venueAddressText">Plaza Independencia - San José de Mayo, Uruguay</p>
         </div>
 
-        <!-- Venue Map Schematic Card -->
-        <div class="venue-map-card">
-          <div class="venue-schematic">
-            <span style="font-size: 0.72rem; color: var(--accent-primary); font-weight: 800; text-transform: uppercase;">Croquis de Sectores</span>
+        <!-- Interactive Satellite Map Card (Plaza Independencia - San José de Mayo) -->
+        <div class="venue-satellite-map-card">
+          <div class="venue-map-header">
+            <div>
+              <span class="venue-map-pill">🛰️ Vista Aérea Satelital</span>
+              <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 900; color: #fef08a; margin-top: 4px;">
+                Plaza Independencia - San José de Mayo
+              </h3>
+            </div>
+            <span style="font-size: 0.72rem; color: var(--text-muted);">Toca una zona para ver detalles</span>
+          </div>
+
+          <!-- Interactive Satellite Map Container -->
+          <div class="visitor-satellite-map-wrapper">
+            <div class="visitor-satellite-map" id="visitorSatelliteMap">
+              <img src="images/map-plaza-independencia.webp" alt="Mapa Satelital Plaza Independencia San José" class="visitor-satellite-img" loading="eager">
+              <div id="visitorMapPinsLayer" class="visitor-map-pins-layer">
+                <!-- Injected dynamically by App.renderVisitorMap() -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Zone Details Box -->
+          <div id="visitorZoneDetailBox" class="visitor-zone-detail-box" style="display: none;">
+            <!-- Injected when clicking a pin -->
+          </div>
+
+          <!-- Quick Zone Selector Chips -->
+          <div style="padding: 12px 14px 4px 14px;">
+            <span style="font-size: 0.72rem; color: var(--accent-secondary); font-weight: 800; text-transform: uppercase;">
+              Sectores & Zonas del Predio:
+            </span>
             <div class="map-zones-grid" id="mapZonesGrid">
               <!-- Injected dynamically by App.renderDynamicEventInfo() -->
             </div>
           </div>
 
           <div class="directions-buttons-grid">
-            <a href="https://maps.google.com/?q=Parque+Central" target="_blank" rel="noopener" class="btn-direction btn-gmaps">
-              📍 Abrir Google Maps
+            <a href="https://maps.google.com/?q=Plaza+Independencia+San+Jose+de+Mayo+Uruguay" target="_blank" rel="noopener" class="btn-direction btn-gmaps" id="venueMapsBtn">
+              📍 Abrir en Google Maps
             </a>
-            <a href="https://waze.com/ul?q=Parque+Central" target="_blank" rel="noopener" class="btn-direction btn-waze">
-              🚙 Ir con Waze
+            <a href="https://waze.com/ul?q=Plaza+Independencia+San+Jose+de+Mayo+Uruguay" target="_blank" rel="noopener" class="btn-direction btn-waze" id="venueWazeBtn">
+              🚙 Navegar con Waze
             </a>
           </div>
         </div>

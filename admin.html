@@ -84,6 +84,10 @@
           <span>🍔</span>
           <span>Stands</span>
         </button>
+        <button class="admin-tab-btn" data-tab="map-zones">
+          <span>🗺️</span>
+          <span>Zonas / Mapa</span>
+        </button>
         <button class="admin-tab-btn" data-tab="announcements">
           <span>📢</span>
           <span>Avisos</span>
@@ -158,7 +162,128 @@
       </div>
 
       <!-- ================================================================
-           TAB 3: FLASH ANNOUNCEMENTS CRUD
+           TAB 3: INTERACTIVE MAP & ZONE MARKER TOOL
+           ================================================================ -->
+      <div class="admin-pane admin-card-box" id="pane-map-zones" style="display: none;">
+        <div class="admin-section-header">
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; color: #fef08a;">
+              🗺️ Marcado de Zonas: Plaza Independencia
+            </h3>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">
+              Haz clic directamente en el mapa satelital para ubicar o reposicionar zonas con nombre, color e icono.
+            </p>
+          </div>
+          <div class="admin-section-actions">
+            <button class="btn-admin-create" onclick="AdminApp.resetZoneForm()">
+              ➕ Nueva Zona
+            </button>
+            <button class="btn-admin-action" onclick="AdminApp.fetchState()">🔄 Refrescar</button>
+          </div>
+        </div>
+
+        <!-- Map Visual Canvas & Live Marker Tool -->
+        <div class="admin-map-editor-wrapper">
+          <!-- Satellite Map Container -->
+          <div class="admin-satellite-map-card">
+            <div class="admin-satellite-header">
+              <span style="font-size:0.75rem; font-weight:800; color:var(--accent-secondary); text-transform:uppercase;">
+                📍 Mapa Satelital Interactivo (San José de Mayo)
+              </span>
+              <span style="font-size:0.72rem; color:var(--text-muted);">Toca para fijar coordenadas X/Y</span>
+            </div>
+
+            <div class="admin-satellite-map" id="adminSatelliteMap" onclick="AdminApp.handleMapClick(event)">
+              <img src="images/map-plaza-independencia.webp" alt="Plaza Independencia - San José de Mayo" class="admin-satellite-img" id="adminMapImage" loading="eager">
+              <div id="adminMapPinsContainer" class="admin-map-pins-layer">
+                <!-- Dynamic zone markers injected by AdminApp.renderMapEditor() -->
+              </div>
+              <div id="adminCrosshairPin" class="map-crosshair-pin" style="display: none;">
+                <span class="crosshair-icon">📍</span>
+                <span class="crosshair-badge" id="adminCrosshairCoords">50%, 50%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zone Form Panel -->
+          <div class="admin-zone-form-card">
+            <h4 id="zoneFormHeading" style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 800; color: #60a5fa; margin-bottom: 8px;">
+              ➕ Crear / Modificar Zona
+            </h4>
+            
+            <form id="formAdminZone" onsubmit="AdminApp.saveZone(event)" style="display: flex; flex-direction: column; gap: 10px;">
+              <input type="hidden" id="zoneIdInput" value="">
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div class="admin-form-group">
+                  <label>Código de Zona *</label>
+                  <input type="text" id="zoneCodeInput" placeholder="Ej: ZONA A" required>
+                </div>
+                <div class="admin-form-group">
+                  <label>Icono Emoji</label>
+                  <input type="text" id="zoneIconInput" placeholder="🥩" value="📍">
+                </div>
+              </div>
+
+              <div class="admin-form-group">
+                <label>Nombre de la Zona *</label>
+                <input type="text" id="zoneNameInput" placeholder="Ej: 🥩 Pastura & Asados Criollos" required>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div class="admin-form-group">
+                  <label>Categoría</label>
+                  <input type="text" id="zoneCategoryInput" placeholder="Ej: Gastronomía">
+                </div>
+                <div class="admin-form-group">
+                  <label>Color de Marcador</label>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="color" id="zoneColorInput" value="#10b981" oninput="document.getElementById('zoneColorHex').textContent = this.value" style="width: 44px; height: 38px; padding: 2px; border-radius: var(--radius-sm); border: 1px solid var(--admin-border); cursor: pointer; background: transparent;">
+                    <span id="zoneColorHex" style="font-size: 0.8rem; font-family: monospace; color: var(--text-muted);">#10b981</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Coordinates (auto-filled on map click) -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.25); padding: 8px; border-radius: var(--radius-sm); border: 1px dashed var(--admin-border-subtle);">
+                <div class="admin-form-group">
+                  <label style="font-size:0.7rem;">Posición X (%)</label>
+                  <input type="number" id="zoneXInput" min="0" max="100" step="1" value="50" required oninput="AdminApp.updatePreviewPin()">
+                </div>
+                <div class="admin-form-group">
+                  <label style="font-size:0.7rem;">Posición Y (%)</label>
+                  <input type="number" id="zoneYInput" min="0" max="100" step="1" value="50" required oninput="AdminApp.updatePreviewPin()">
+                </div>
+              </div>
+
+              <div class="admin-form-group">
+                <label>Descripción / Puntos Clave</label>
+                <textarea id="zoneDescInput" rows="2" placeholder="Detalles de lo que se ubica en este sector de la plaza..."></textarea>
+              </div>
+
+              <div style="display: flex; gap: 8px; margin-top: 4px;">
+                <button type="button" class="btn-admin-action" onclick="AdminApp.resetZoneForm()" style="flex: 1;">
+                  Limpiar
+                </button>
+                <button type="submit" class="btn-admin-create" style="flex: 2;">
+                  💾 Guardar Zona
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Zones List Table / Cards -->
+        <h4 style="font-family: var(--font-heading); font-size: 1rem; font-weight: 800; margin-top: 14px;">
+          Zonas Marcadas en la Plaza (<span id="adminZoneCount">0</span>)
+        </h4>
+        <div id="adminZonesListGrid" class="admin-zones-cards-grid">
+          <!-- Dynamic zone items injected by JS -->
+        </div>
+      </div>
+
+      <!-- ================================================================
+           TAB 4: FLASH ANNOUNCEMENTS CRUD
            ================================================================ -->
       <div class="admin-pane admin-card-box" id="pane-announcements" style="display: none;">
         <div>
