@@ -151,6 +151,32 @@ body {
   letter-spacing: 0.05em;
 }
 
+@media (max-width: 380px) {
+  .app-header {
+    padding: calc(var(--safe-top) + 8px) 12px 8px 12px;
+  }
+  .brand-logo-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
+  }
+  .brand-info h1 {
+    font-size: 1.05rem;
+  }
+  .brand-info span {
+    font-size: 0.65rem;
+  }
+  .status-pill {
+    padding: 3px 8px;
+    font-size: 0.7rem;
+  }
+  .btn-icon-pill {
+    width: 34px;
+    height: 34px;
+    font-size: 0.85rem;
+  }
+}
+
 /* Desktop Top Navigation Bar (Hidden on Mobile) */
 .desktop-nav-bar {
   display: none;

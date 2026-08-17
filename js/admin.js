@@ -185,46 +185,50 @@ const AdminApp = {
 
     container.innerHTML = this.dbState.schedule.map(ev => {
       const statusBadge = {
-        'live': '<span style="color:#ef4444; font-weight:800;">🔴 EN VIVO</span>',
-        'scheduled': '<span style="color:#10b981; font-weight:700;">⏰ Programado</span>',
-        'delayed': '<span style="color:#f59e0b; font-weight:700;">⚠️ Con Retraso</span>',
-        'completed': '<span style="color:#6b7280; font-weight:700;">✅ Finalizado</span>'
+        'live': '<span class="card-status-badge" style="color:#ef4444; font-weight:800;">🔴 EN VIVO</span>',
+        'scheduled': '<span class="card-status-badge" style="color:#10b981; font-weight:700;">⏰ Programado</span>',
+        'delayed': '<span class="card-status-badge" style="color:#f59e0b; font-weight:700;">⚠️ Con Retraso</span>',
+        'completed': '<span class="card-status-badge" style="color:#6b7280; font-weight:700;">✅ Finalizado</span>'
       }[ev.status] || ev.status;
 
       return `
         <div class="admin-item-row" data-id="${ev.id}">
-          <div class="admin-item-header">
-            <div>
-              <span style="font-size:0.75rem; color:var(--text-muted); font-weight:800;">${ev.stageName} • [${ev.badge}]</span>
-              <h4 style="font-family:var(--font-heading); font-size:1.05rem; font-weight:800;">${ev.speakerAvatar || '👨‍🍳'} ${ev.title}</h4>
-              <span style="font-size:0.8rem; color:var(--text-secondary);">👤 ${ev.speaker}</span>
-            </div>
-            <div style="text-align:right;">
-              <div style="font-family:var(--font-heading); font-size:1rem; font-weight:800; color:var(--color-gold);">
-                ${ev.startTime} - ${ev.endTime}
-              </div>
-              <div>${statusBadge}</div>
-            </div>
+          <!-- Top Row: Stage Tag + Status Badge -->
+          <div class="card-row-top">
+            <span class="card-tag-stage">🎪 ${ev.stageName} • [${ev.badge || 'Show'}]</span>
+            <div>${statusBadge}</div>
           </div>
 
+          <!-- Middle Row: Full Width Show Title -->
+          <div class="card-row-title">
+            <h4>${ev.speakerAvatar || '👨‍🍳'} ${ev.title}</h4>
+          </div>
+
+          <!-- Info Row: Speaker + Time Range Pill -->
+          <div class="card-row-meta">
+            <span>👤 ${ev.speaker}</span>
+            <span class="card-time-pill">🕒 ${ev.startTime} - ${ev.endTime}</span>
+          </div>
+
+          <!-- Action Buttons Toolbar -->
           <div class="admin-quick-actions">
             <button class="btn-admin-action btn-live-now" onclick="AdminApp.updateEventStatus('${ev.id}', 'live')">
               🔴 En Vivo
             </button>
             <button class="btn-admin-action" onclick="AdminApp.adjustTime('${ev.id}', 15)">
-              ⏰ +15m Retraso
+              ⏰ +15m
             </button>
             <button class="btn-admin-action" onclick="AdminApp.adjustTime('${ev.id}', -15)">
-              ⏰ -15m Adelanto
+              ⏰ -15m
             </button>
             <button class="btn-admin-action" onclick="AdminApp.updateEventStatus('${ev.id}', 'completed')">
-              ✅ Finalizar
+              ✅ Fin
             </button>
             <button class="btn-admin-action" style="background:rgba(59,130,246,0.2); color:#93c5fd;" onclick="AdminApp.openEditShowModal('${ev.id}')">
               ✏️ Modificar
             </button>
             <button class="btn-admin-action btn-danger" onclick="AdminApp.deleteShow('${ev.id}')">
-              🗑️ Dar de Baja
+              🗑️ Baja
             </button>
           </div>
         </div>
@@ -452,19 +456,24 @@ const AdminApp = {
 
     if (infoContainer) {
       infoContainer.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-primary); padding:12px; border-radius:var(--radius-md); border:1px solid var(--admin-border);">
-          <div>
-            <span style="font-size:0.75rem; color:var(--admin-accent); font-weight:800;">${stand.number} • ${stand.zone}</span>
-            <h3 style="font-family:var(--font-heading); font-size:1.15rem; font-weight:800;">${stand.fallbackEmoji || '🍽️'} ${stand.name}</h3>
-            <span style="font-size:0.78rem; color:var(--text-secondary);">🌟 Especialidad: ${stand.featuredDish || 'Plato Gourmet'} • Cat: ${stand.categoryName || stand.category}</span>
+        <div class="admin-item-row" style="background:var(--bg-primary); border-color:var(--admin-border);">
+          <div class="card-row-top">
+            <span class="card-tag-stage">📍 ${stand.number} • ${stand.zone}</span>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-admin-action" style="background:rgba(59,130,246,0.2); color:#93c5fd;" onclick="AdminApp.openEditStandModal('${stand.id}')">
+                ✏️ Modificar
+              </button>
+              <button class="btn-admin-action btn-danger" onclick="AdminApp.deleteStand('${stand.id}')">
+                🗑️ Baja
+              </button>
+            </div>
           </div>
-          <div style="display:flex; gap:6px;">
-            <button class="btn-admin-action" style="background:rgba(59,130,246,0.2); color:#93c5fd;" onclick="AdminApp.openEditStandModal('${stand.id}')">
-              ✏️ Modificar
-            </button>
-            <button class="btn-admin-action btn-danger" onclick="AdminApp.deleteStand('${stand.id}')">
-              🗑️ Dar de Baja
-            </button>
+          <div class="card-row-title">
+            <h4>${stand.fallbackEmoji || '🍽️'} ${stand.name}</h4>
+          </div>
+          <div class="card-row-meta">
+            <span>🌟 Especialidad: <strong style="color:var(--text-primary);">${stand.featuredDish || 'Plato Gourmet'}</strong></span>
+            <span style="font-size:0.75rem; color:var(--text-muted);">${stand.categoryName || stand.category}</span>
           </div>
         </div>
       `;
@@ -478,14 +487,14 @@ const AdminApp = {
     container.innerHTML = stand.menu.map(m => {
       const isSoldOut = Boolean(m.isSoldOut);
       return `
-        <div class="admin-item-row" style="flex-direction:row; align-items:center; justify-content:space-between;">
-          <div style="flex:1; padding-right:10px;">
-            <strong style="color:var(--text-primary); font-size:0.95rem;">${m.item}</strong>
-            <div style="font-size:0.75rem; color:var(--text-secondary);">${m.desc || ''}</div>
-            <div style="font-size:0.85rem; color:var(--color-gold); font-weight:800; margin-top:2px;">${m.price}</div>
+        <div class="admin-item-row">
+          <div class="card-row-top">
+            <strong style="color:var(--text-primary); font-size:0.96rem;">${m.item}</strong>
+            <span class="card-time-pill" style="color:var(--color-gold); font-size:0.88rem;">${m.price}</span>
           </div>
+          ${m.desc ? `<div style="font-size:0.78rem; color:var(--text-secondary); line-height:1.35;">${m.desc}</div>` : ''}
 
-          <div style="display:flex; align-items:center; gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding-top:8px; border-top:1px solid var(--admin-border-subtle);">
             <label class="stock-switch-label">
               <span style="font-size:0.75rem;">${isSoldOut ? '🔴 AGOTADO' : '🟢 DISPONIBLE'}</span>
               <label class="stock-switch">
@@ -493,12 +502,14 @@ const AdminApp = {
                 <span class="slider"></span>
               </label>
             </label>
-            <button class="btn-admin-action" onclick="AdminApp.openEditDishModal('${stand.id}', '${m.id || m.item}')" title="Editar Plato">
-              ✏️
-            </button>
-            <button class="btn-admin-action btn-danger" onclick="AdminApp.deleteDish('${stand.id}', '${m.id || m.item}')" title="Eliminar Plato">
-              🗑️
-            </button>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-admin-action" onclick="AdminApp.openEditDishModal('${stand.id}', '${m.id || m.item}')" title="Editar Plato">
+                ✏️ Editar
+              </button>
+              <button class="btn-admin-action btn-danger" onclick="AdminApp.deleteDish('${stand.id}', '${m.id || m.item}')" title="Eliminar Plato">
+                🗑️ Eliminar
+              </button>
+            </div>
           </div>
         </div>
       `;

@@ -225,6 +225,51 @@ async function testAdminApp() {
     await AdminApp.deleteAnnouncement(createdAnn.id);
     assert(!AdminApp.dbState.announcements.some(a => a.id === createdAnn.id), `Botón 'Eliminar Aviso' borra el aviso flash`);
   }
+
+  // 6. Test Shows CRUD Modal (Alta, Modificación y Baja)
+  console.log('\n6. Probando Alta y Modificación de Shows en Vivo:');
+  AdminApp.openNewShowModal();
+  const showModal = document.getElementById('modalShowOverlay');
+  assert(showModal && showModal.classList.contains('active'), `Modal 'Alta de Nuevo Show' se abre correctamente`);
+
+  document.getElementById('showTitleInput').value = 'Show Test Automatizado';
+  document.getElementById('showSpeakerInput').value = 'Chef Test';
+  document.getElementById('showStartInput').value = '16:00';
+  document.getElementById('showEndInput').value = '17:00';
+  await AdminApp.saveShow({ preventDefault: () => {} });
+
+  const addedShow = AdminApp.dbState.schedule.find(s => s.title === 'Show Test Automatizado');
+  assert(addedShow !== undefined, `Nuevo show guardado dinámicamente en el estado`);
+  assert(!showModal.classList.contains('active'), `Modal de show se cierra tras guardar`);
+
+  if (addedShow) {
+    await AdminApp.deleteShow(addedShow.id);
+    assert(!AdminApp.dbState.schedule.some(s => s.id === addedShow.id), `Show eliminado correctamente`);
+  }
+
+  // 7. Test Categories & Config Management
+  console.log('\n7. Probando Categorías y Ajustes Generales del Evento:');
+  document.getElementById('newShowCatName').value = 'Magia & Humor';
+  document.getElementById('newShowCatIcon').value = '🎩';
+  await AdminApp.addCategory({ preventDefault: () => {} }, 'show');
+
+  const addedCat = AdminApp.dbState.showCategories.find(c => c.name === 'Magia & Humor');
+  assert(addedCat !== undefined, `Nueva categoría de show 'Magia & Humor' agregada con éxito`);
+
+  if (addedCat) {
+    await AdminApp.deleteCategory('show', addedCat.id);
+    assert(!AdminApp.dbState.showCategories.some(c => c.id === addedCat.id), `Categoría de show eliminada con éxito`);
+  }
+
+  document.getElementById('cfgEventName').value = 'EcoGastroFest 2026';
+  await AdminApp.saveEventConfig({ preventDefault: () => {} });
+  assert(AdminApp.dbState.event.name === 'EcoGastroFest 2026', `Configuración general del evento actualizada`);
+
+  // 8. Test UI Responsive Layout Elements
+  console.log('\n8. Validando Estructuras Responsivas de la UI:');
+  assert(document.querySelector('.admin-navbar-actions') !== null, `Navbar de administración contiene contenedor de acciones responsivas`);
+  assert(document.querySelector('.admin-tabs-nav') !== null, `Barra de pestañas adaptativa presente`);
+  assert(document.querySelectorAll('.card-row-top').length > 0, `Cards de shows y stands renderizan encabezados flexibles (.card-row-top)`);
 }
 
 async function run() {

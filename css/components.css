@@ -1176,3 +1176,63 @@
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
+
+/* --------------------------------------------------------------------------
+   12. MOBILE VIEWPORT SIZING OPTIMIZATIONS (< 400px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 400px) {
+  .bottom-nav {
+    padding: 6px 8px calc(var(--safe-bottom) + 6px) 8px;
+  }
+
+  .nav-item {
+    padding: 4px 1px;
+    gap: 2px;
+  }
+
+  .nav-item svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .nav-item span {
+    font-size: 0.63rem;
+  }
+
+  .roulette-wheel-wrapper {
+    width: 230px;
+    height: 230px;
+  }
+
+  #rouletteCanvas {
+    width: 230px;
+    height: 230px;
+  }
+
+  .ticket-serial {
+    font-size: 1.55rem;
+    padding: 6px 0;
+  }
+
+  .ticket-actions-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .sim-buttons-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sponsors-logos-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .live-show-info h3 {
+    font-size: 1.15rem;
+  }
+
+  .bottom-sheet {
+    padding: 16px 16px calc(var(--safe-bottom) + 20px) 16px;
+  }
+}
+

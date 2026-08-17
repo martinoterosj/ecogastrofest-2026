@@ -21,15 +21,15 @@
     <!-- Top Navigation Bar -->
     <header class="admin-navbar">
       <div class="admin-brand">
-        <span style="font-size: 1.5rem;">⚙️</span>
-        <div>
+        <div class="admin-brand-icon">⚙️</div>
+        <div class="admin-brand-text">
           <h2>GastroFest Control</h2>
-          <span style="font-size: 0.72rem; color: var(--admin-accent); font-weight: 700;">PANEL DE ADMINISTRACIÓN DINÁMICO</span>
+          <span>Panel de Administración Dinámico</span>
         </div>
       </div>
 
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <a href="firebase_setup.html" class="btn-admin-action" style="text-decoration: none; background: rgba(52, 211, 153, 0.15); color: #34d399; font-weight: 800;">
+      <div class="admin-navbar-actions">
+        <a href="firebase_setup.html" class="btn-cloud-connect" title="Conectar Base de Datos Firestore">
           ☁️ Conectar Firebase
         </a>
         <span class="admin-user-pill" id="operatorNameBadge">🔒 No autenticado</span>
@@ -78,7 +78,7 @@
     <section id="adminDashboardSection" style="display: none; flex-direction: column; gap: 16px;">
 
       <!-- Admin Tabs Navigation -->
-      <nav class="admin-tabs-nav" style="grid-template-columns: repeat(5, 1fr);">
+      <nav class="admin-tabs-nav">
         <button class="admin-tab-btn active" data-tab="schedule">
           <span>🎤</span>
           <span>Shows</span>
@@ -110,7 +110,7 @@
             <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 800;">Gestión de Shows & Cronograma</h3>
             <p style="font-size: 0.8rem; color: var(--text-secondary);">Crea nuevas actividades, edita datos de expositores o elimina eventos.</p>
           </div>
-          <div style="display: flex; gap: 8px;">
+          <div class="admin-section-actions">
             <button class="btn-admin-create" onclick="AdminApp.openNewShowModal()">
               ➕ Nuevo Show
             </button>
@@ -132,9 +132,11 @@
             <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 800;">Gestión de Stands & Menús</h3>
             <p style="font-size: 0.8rem; color: var(--text-secondary);">Altas, bajas y modificaciones de puestos, platos, precios y stock.</p>
           </div>
-          <button class="btn-admin-create" onclick="AdminApp.openNewStandModal()">
-            ➕ Nuevo Stand
-          </button>
+          <div class="admin-section-actions">
+            <button class="btn-admin-create" onclick="AdminApp.openNewStandModal()">
+              ➕ Nuevo Stand
+            </button>
+          </div>
         </div>
 
         <div class="admin-form-group">
@@ -146,7 +148,7 @@
 
         <div id="adminStandDetailsHeader"></div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; flex-wrap: wrap; gap: 8px;">
           <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 800;">Platos en Carta del Stand</h4>
           <button class="btn-admin-action btn-success" onclick="AdminApp.openNewDishModal()">
             ➕ Agregar Plato
@@ -167,8 +169,8 @@
           <p style="font-size: 0.8rem; color: var(--text-secondary);">Se mostrará como banner destacado superior en las pantallas de todos los móviles.</p>
         </div>
 
-        <form onsubmit="AdminApp.postAnnouncement(event)" style="display: flex; flex-direction: column; gap: 10px; background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
-          <div style="display: grid; grid-template-columns: 80px 1fr; gap: 10px;">
+        <form onsubmit="AdminApp.postAnnouncement(event)" style="display: flex; flex-direction: column; gap: 10px; background: var(--admin-card-inner); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--admin-border-subtle);">
+          <div class="admin-form-grid">
             <div>
               <label style="font-size: 0.72rem; font-weight: 800; color: var(--text-muted);">ICONO</label>
               <select id="annIcon" style="width: 100%; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 10px; border-radius: var(--radius-sm); font-size: 1.1rem;">
@@ -236,8 +238,8 @@
         </div>
 
         <!-- 1. Event Details Form -->
-        <form onsubmit="AdminApp.saveEventConfig(event)" style="background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 12px;">
-          <h4 style="font-family: var(--font-heading); font-size: 1rem; font-weight: 800; color: var(--admin-accent);">Información Básica</h4>
+        <form onsubmit="AdminApp.saveEventConfig(event)" style="background: var(--admin-card-inner); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--admin-border-subtle); display: flex; flex-direction: column; gap: 12px;">
+          <h4 style="font-family: var(--font-heading); font-size: 1rem; font-weight: 800; color: #60a5fa;">Información Básica</h4>
           
           <div class="admin-form-grid">
             <div class="admin-form-group">
@@ -284,47 +286,47 @@
         </form>
 
         <!-- 2. Manage Show Categories -->
-        <div style="background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <div style="background: var(--admin-card-inner); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--admin-border-subtle);">
           <h4 style="font-family: var(--font-heading); font-size: 1rem; font-weight: 800; margin-bottom: 8px;">Categorías de Shows & Cronograma</h4>
           <div id="adminShowCategoriesList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;"></div>
           
-          <form onsubmit="AdminApp.addCategory(event, 'show')" style="display: flex; gap: 8px;">
-            <input type="text" id="newShowCatIcon" placeholder="Icono (ej. 🎤)" style="width: 100px; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
+          <form onsubmit="AdminApp.addCategory(event, 'show')" class="responsive-add-form">
+            <input type="text" id="newShowCatIcon" placeholder="Icono (ej. 🎤)" style="width: 80px; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
             <input type="text" id="newShowCatName" placeholder="Nombre de categoría (ej. Magia)" required style="flex: 1; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
             <button type="submit" class="btn-admin-action btn-success">➕ Agregar</button>
           </form>
         </div>
 
         <!-- 3. Manage Stand Categories -->
-        <div style="background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <div style="background: var(--admin-card-inner); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--admin-border-subtle);">
           <h4 style="font-family: var(--font-heading); font-size: 1rem; font-weight: 800; margin-bottom: 8px;">Categorías de Stands Gastronómicos</h4>
           <div id="adminStandCategoriesList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;"></div>
           
-          <form onsubmit="AdminApp.addCategory(event, 'stand')" style="display: flex; gap: 8px;">
-            <input type="text" id="newStandCatIcon" placeholder="Icono (ej. 🍕)" style="width: 100px; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
+          <form onsubmit="AdminApp.addCategory(event, 'stand')" class="responsive-add-form">
+            <input type="text" id="newStandCatIcon" placeholder="Icono (ej. 🍕)" style="width: 80px; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
             <input type="text" id="newStandCatName" placeholder="Nombre de categoría (ej. Pizzas & Calzones)" required style="flex: 1; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
             <button type="submit" class="btn-admin-action btn-success">➕ Agregar</button>
           </form>
         </div>
 
         <!-- 4. Manage Stages / Escenarios -->
-        <div style="background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <div style="background: var(--admin-card-inner); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--admin-border-subtle);">
           <h4 style="font-family: var(--font-heading); font-size: 1rem; font-weight: 800; margin-bottom: 8px;">Escenarios & Domos</h4>
           <div id="adminStagesList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;"></div>
           
-          <form onsubmit="AdminApp.addStage(event)" style="display: flex; gap: 8px;">
-            <input type="text" id="newStageIcon" placeholder="Icono (ej. 🎪)" style="width: 100px; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
+          <form onsubmit="AdminApp.addStage(event)" class="responsive-add-form">
+            <input type="text" id="newStageIcon" placeholder="Icono (ej. 🎪)" style="width: 80px; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
             <input type="text" id="newStageName" placeholder="Nombre del escenario (ej. Domo Acústico)" required style="flex: 1; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
             <button type="submit" class="btn-admin-action btn-success">➕ Agregar</button>
           </form>
         </div>
 
         <!-- 5. Manage Sponsors -->
-        <div style="background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        <div style="background: var(--admin-card-inner); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--admin-border-subtle);">
           <h4 style="font-family: var(--font-heading); font-size: 1rem; font-weight: 800; margin-bottom: 8px;">Sponsors & Marcas Aliadas (con Logo)</h4>
           <div id="adminSponsorsList" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;"></div>
           
-          <form onsubmit="AdminApp.addSponsor(event)" style="display: grid; grid-template-columns: 90px 1fr 1fr 1fr 100px; gap: 8px;">
+          <form onsubmit="AdminApp.addSponsor(event)" class="responsive-sponsor-form">
             <select id="newSponsorTier" style="background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
               <option value="gold">Gold ⭐</option>
               <option value="silver">Silver 🥈</option>
