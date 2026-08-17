@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>GastroFest 2026 - Guía Oficial del Evento</title>
+  <meta name="description" content="Guía interactiva móvil para GastroFest 2026. Agenda en vivo, mapa de stands, menús, sorteos en vivo y modo offline.">
+  <meta name="theme-color" content="#0e0e12">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GastroFest">
+
+  <!-- Manifest PWA -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍔</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍔</text></svg>">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- ====================================================================
+         APP HEADER
+         ==================================================================== -->
+    <header class="app-header">
+      <div class="brand-badge">
+        <div class="brand-logo-icon">🌿</div>
+        <div class="brand-info">
+          <h1>EcoGastroFest '26</h1>
+          <span>Feria Gastronómica Sustentable</span>
+        </div>
+      </div>
+
+      <!-- Desktop Navigation Bar (Visible on PC / Monitores > 768px) -->
+      <nav class="desktop-nav-bar" id="desktopNavBar">
+        <button class="desktop-nav-btn active" data-tab="live">🔴 En Vivo</button>
+        <button class="desktop-nav-btn" data-tab="agenda">🗓️ Agenda</button>
+        <button class="desktop-nav-btn" data-tab="stands">🍔 Stands</button>
+        <button class="desktop-nav-btn" data-tab="sorteo">🎟️ Sorteo</button>
+        <button class="desktop-nav-btn" data-tab="info">📍 Info & Eco</button>
+      </nav>
+
+      <div class="header-actions">
+        <!-- Live Online/Offline Network Status Pill -->
+        <div class="status-pill online" id="networkStatusPill">
+          <span class="status-dot"></span>
+          <span id="networkStatusText">En Vivo</span>
+        </div>
+
+        <!-- Time Simulator Quick Toggle -->
+        <button class="btn-icon-pill" id="btnToggleSimulator" title="Simulador de Horario" aria-label="Ajustar Horario">
+          ⏱️
+        </button>
+      </div>
+    </header>
+
+    <!-- ====================================================================
+         MAIN CONTENT TABS AREA
+         ==================================================================== -->
+    <main class="tab-content-area">
+
+      <!-- PWA Install Banner -->
+      <div class="pwa-banner" id="pwaInstallBanner" style="display: none;">
+        <div class="pwa-banner-text">
+          <h4>📲 Instala GastroFest en tu Inicio</h4>
+          <p>Para usar sin conexión y con acceso instantáneo.</p>
+        </div>
+        <button class="btn-pwa-install" id="pwaInstallActionBtn">Instalar</button>
+      </div>
+
+      <!-- Time Simulator Drawer Box (Hidden by default, expandable) -->
+      <div class="time-simulator-box" id="timeSimulatorBox" style="display: none;">
+        <div class="sim-header">
+          <span>⚙️ MODO DEMO: Simular horario del festival</span>
+          <span id="currentTimeDisplay">🕒 14:30 hs</span>
+        </div>
+        <div class="sim-buttons-grid">
+          <button class="btn-sim-time" data-time="11:45">11:45 (Apertura)</button>
+          <button class="btn-sim-time" data-time="13:15">13:15 (Cata Vinos)</button>
+          <button class="btn-sim-time" data-time="14:45">14:45 (Smash Burger)</button>
+          <button class="btn-sim-time" data-time="17:45">17:45 (Wok Asiático)</button>
+          <button class="btn-sim-time" data-time="19:45">19:45 (Sorteo 1)</button>
+          <button class="btn-sim-time" data-time="21:00">21:00 (Cierre DJ)</button>
+          <button class="btn-sim-time" data-time="22:30">22:30 (Gran Final)</button>
+          <button class="btn-sim-time active" data-time="real">Hora Actual</button>
+        </div>
+      </div>
+
+      <!-- ================================================================
+           TAB 1: EN VIVO AHORA (RADAR EN TIEMPO REAL)
+           ================================================================ -->
+      <section class="tab-pane active" id="tab-live">
+        
+        <!-- Live Radar Card -->
+        <div class="live-radar-card">
+          <div class="live-header-bar">
+            <div class="live-badge-pulse">
+              <span class="live-dot"></span>
+              <span>EN VIVO AHORA</span>
+            </div>
+            <span style="font-size: 0.75rem; color: var(--color-gold); font-weight: 700;">GastroFest Live</span>
+          </div>
+
+          <div id="liveEventContainer">
+            <!-- Dynamic Content Injected by LiveRadar -->
+          </div>
+
+          <div id="nextEventContainer">
+            <!-- Dynamic Next Up Injected by LiveRadar -->
+          </div>
+        </div>
+
+        <!-- Quick Action Cards Grid -->
+        <div>
+          <h2 class="section-title">
+            <span>Accesos Rápidos</span>
+            <span class="badge-count">1 toque</span>
+          </h2>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="stand-card" onclick="App.switchTab('stands')" style="padding: 14px; display: flex; flex-direction: column; gap: 6px;">
+              <span style="font-size: 1.8rem;">🍔</span>
+              <strong style="color: var(--text-primary); font-size: 0.95rem;">Ver 8 Stands</strong>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">Platos, precios y opciones veganas/celíacos.</span>
+            </div>
+
+            <div class="stand-card" onclick="App.switchTab('sorteo')" style="padding: 14px; display: flex; flex-direction: column; gap: 6px; border-color: rgba(245, 158, 11, 0.3);">
+              <span style="font-size: 1.8rem;">🎟️</span>
+              <strong style="color: #fef08a; font-size: 0.95rem;">Sorteos del Día</strong>
+              <span style="font-size: 0.75rem; color: #fde68a;">Genera tu ticket digital con QR gratis.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Event Flash Notification Card -->
+        <div style="background: rgba(255, 94, 30, 0.1); border: 1px solid rgba(255, 94, 30, 0.25); border-radius: var(--radius-lg); padding: 14px; display: flex; gap: 12px; align-items: center;">
+          <span style="font-size: 1.8rem;">💡</span>
+          <div>
+            <h4 style="font-size: 0.9rem; font-weight: 800; color: #ff8a00;">¿Sin señal en el predio?</h4>
+            <p style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;">
+              Esta app funciona 100% offline. Puedes ver el cronograma, mapa y tu ticket aunque no tengas internet.
+            </p>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================================================================
+           TAB 2: AGENDA & CRONOGRAMA INTERACTIVO
+           ================================================================ -->
+      <section class="tab-pane" id="tab-agenda">
+        <div>
+          <h2 class="section-title">
+            <span>Cronograma del Día</span>
+            <span class="badge-count" id="agendaCountBadge">Cargando...</span>
+          </h2>
+          <p class="section-subtitle">Toca la estrella ⭐ para guardar tus shows favoritos.</p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-input-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="agendaSearchInput" placeholder="Buscar por chef, show o escenario...">
+        </div>
+
+        <!-- Category Filter Chips -->
+        <div class="filter-scroll-wrapper" id="agendaFilters">
+          <button class="filter-chip active" data-category="all">✨ Todos</button>
+          <button class="filter-chip" data-category="favorites">⭐ Mis Favoritos</button>
+          <button class="filter-chip" data-category="masterclass">🔥 Masterclasses</button>
+          <button class="filter-chip" data-category="cata">🍷 Catas & Vinos</button>
+          <button class="filter-chip" data-category="musica">🎸 Shows & Música</button>
+          <button class="filter-chip" data-category="sorteo">🎟️ Sorteos</button>
+          <button class="filter-chip" data-category="taller">🧁 Talleres Niños</button>
+        </div>
+
+        <!-- Agenda Cards List Container -->
+        <div class="agenda-list" id="agendaListContainer">
+          <!-- Injected by Agenda JS -->
+        </div>
+      </section>
+
+      <!-- ================================================================
+           TAB 3: STANDS GASTRONÓMICOS & MENÚ
+           ================================================================ -->
+      <section class="tab-pane" id="tab-stands">
+        <div>
+          <h2 class="section-title">
+            <span>Directorio de Stands</span>
+            <span class="badge-count" id="standsCountBadge">8 puestos</span>
+          </h2>
+          <p class="section-subtitle">Explora los platos estrella, menús con precios y opciones especiales.</p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-input-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="standsSearchInput" placeholder="Buscar hamburguesa, vacío, bao, tacos...">
+        </div>
+
+        <!-- Category Filter Chips -->
+        <div class="filter-scroll-wrapper" id="standsFilters">
+          <button class="filter-chip active" data-category="all">🍔 Todos</button>
+          <button class="filter-chip" data-category="carnes">🥩 Carnes & Asado</button>
+          <button class="filter-chip" data-category="burgers">🍔 Hamburguesas</button>
+          <button class="filter-chip" data-category="vegano">🌱 100% Vegano</button>
+          <button class="filter-chip" data-category="asiatica">🥢 Street Food / Asiático</button>
+          <button class="filter-chip" data-category="bebidas">🍺 Cervezas & Tragos</button>
+          <button class="filter-chip" data-category="dulces">🍦 Helados & Postres</button>
+        </div>
+
+        <!-- Stands Grid Container -->
+        <div class="stands-grid" id="standsListContainer">
+          <!-- Injected by Stands JS -->
+        </div>
+      </section>
+
+      <!-- ================================================================
+           TAB 4: SORTEOS & TICKET DIGITAL (OFFLINE)
+           ================================================================ -->
+      <section class="tab-pane" id="tab-sorteo">
+        
+        <!-- Hero Banner -->
+        <div class="raffle-hero-banner">
+          <h3>🎉 Sorteos GastroFest 2026</h3>
+          <p>Regístrate en 10 segundos y participa por increíbles premios gastronómicos durante todo el día.</p>
+          
+          <div class="prizes-chips">
+            <span class="prize-pill">🎁 1° Set Asador Profesional</span>
+            <span class="prize-pill">🍷 2° Canasta Gourmet + Vinos</span>
+            <span class="prize-pill">🍽️ 3° Cenas para 2 Personas</span>
+          </div>
+        </div>
+
+        <!-- Registration Form Section (Visible if user hasn't registered) -->
+        <div id="raffleFormSection">
+          <form class="raffle-form" id="raffleRegistrationForm">
+            <h4 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 800; color: var(--text-primary);">
+              Generar Ticket de Sorteo
+            </h4>
+
+            <div class="form-group">
+              <label for="raffleName">Tu Nombre Completo *</label>
+              <input type="text" id="raffleName" placeholder="Ej: Martín Rodríguez" required autocomplete="name">
+            </div>
+
+            <div class="form-group">
+              <label for="rafflePhone">WhatsApp / Teléfono *</label>
+              <input type="tel" id="rafflePhone" placeholder="Ej: 11 5555 1234" required autocomplete="tel">
+            </div>
+
+            <div class="form-group">
+              <label for="raffleStandSelect">¿Cuál es tu Stand Favorito?</label>
+              <select id="raffleStandSelect">
+                <!-- Injected by Raffle JS -->
+              </select>
+            </div>
+
+            <button type="submit" class="btn-primary-action">
+              🎟️ Obtener mi Ticket Digital Gratis
+            </button>
+            <span style="font-size: 0.72rem; color: var(--text-muted); text-align: center;">Tus datos quedan guardados en tu teléfono y funcionan sin conexión.</span>
+          </form>
+        </div>
+
+        <!-- Golden Ticket Section (Visible once registered) -->
+        <div id="raffleTicketSection" style="display: none;">
+          <div class="ticket-card">
+            <div class="ticket-top">
+              <span class="ticket-badge">TICKET OFICIAL GASTROFEST</span>
+              <span style="font-size: 0.75rem; color: #fde68a; font-weight: 700;">Edición 2026</span>
+            </div>
+
+            <div class="ticket-serial" id="ticketSerialDisplay">#GF-7842</div>
+
+            <div class="ticket-qr-container">
+              <canvas id="ticketQrCanvas" class="ticket-qr-canvas"></canvas>
+              <span style="font-size: 0.68rem; color: #fde68a; text-transform: uppercase; font-weight: 800;">Código de Validación Único</span>
+            </div>
+
+            <div class="ticket-info-grid">
+              <div class="ticket-info-item">
+                <span class="label">Titular</span>
+                <span class="value" id="ticketHolderName">Martín</span>
+              </div>
+              <div class="ticket-info-item">
+                <span class="label">Teléfono</span>
+                <span class="value" id="ticketHolderPhone">11-5555-1234</span>
+              </div>
+              <div class="ticket-info-item">
+                <span class="label">Stand Votado</span>
+                <span class="value" id="ticketHolderStand">La Fogonera</span>
+              </div>
+              <div class="ticket-info-item">
+                <span class="label">Emitido</span>
+                <span class="value" id="ticketHolderTime">14:30 hs</span>
+              </div>
+            </div>
+
+            <div class="ticket-actions-row">
+              <button class="btn-ticket-secondary" onclick="Raffle.shareWhatsApp()">
+                📲 Enviar a WhatsApp
+              </button>
+              <button class="btn-ticket-secondary" onclick="Raffle.copyTicketCode()">
+                📋 Copiar Código
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Host Live Sorteo Section Trigger -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 16px; text-align: center;">
+          <span style="font-size: 1.6rem; display: block; margin-bottom: 4px;">🎡</span>
+          <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 800; color: var(--text-primary);">
+            Panel de Sorteos en Escenario
+          </h4>
+          <p style="font-size: 0.78rem; color: var(--text-secondary); margin: 4px 0 12px 0;">
+            Herramienta interactiva para los conductores y animadores del festival en vivo.
+          </p>
+          <button class="btn-primary-action" style="background: linear-gradient(135deg, #f59e0b, #d97706); font-size: 0.92rem; padding: 10px;" onclick="Raffle.openHostRouletteModal()">
+            🎡 Abrir Ruleta de Sorteos en Vivo
+          </button>
+        </div>
+
+      </section>
+
+      <!-- ================================================================
+           TAB 5: UBICACIÓN, ACCESOS & SPONSORS
+           ================================================================ -->
+      <section class="tab-pane" id="tab-info">
+        <div>
+          <h2 class="section-title">
+            <span>Ubicación & Accesos</span>
+          </h2>
+          <p class="section-subtitle" id="venueAddressText">Parque Central - Predio Ferial Gourmet</p>
+        </div>
+
+        <!-- Venue Map Schematic Card -->
+        <div class="venue-map-card">
+          <div class="venue-schematic">
+            <span style="font-size: 0.72rem; color: var(--accent-primary); font-weight: 800; text-transform: uppercase;">Croquis de Sectores</span>
+            <div class="map-zones-grid" id="mapZonesGrid">
+              <!-- Injected dynamically by App.renderDynamicEventInfo() -->
+            </div>
+          </div>
+
+          <div class="directions-buttons-grid">
+            <a href="https://maps.google.com/?q=Parque+Central" target="_blank" rel="noopener" class="btn-direction btn-gmaps">
+              📍 Abrir Google Maps
+            </a>
+            <a href="https://waze.com/ul?q=Parque+Central" target="_blank" rel="noopener" class="btn-direction btn-waze">
+              🚙 Ir con Waze
+            </a>
+          </div>
+        </div>
+
+        <!-- Venue Guidelines & First Aid FAQ -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+          <h4 style="font-family: var(--font-heading); font-size: 1rem; font-weight: 800; color: var(--text-primary);">Información Útil</h4>
+          
+          <div style="display: flex; gap: 10px; font-size: 0.82rem; color: var(--text-secondary);">
+            <span>🚗</span>
+            <div>
+              <strong style="color: var(--text-primary);">Estacionamiento:</strong>
+              <p id="infoParkingText">Entrada por Calle Los Aromos. Capacidad para 600 vehículos (tarifa fija $2.000).</p>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px; font-size: 0.82rem; color: var(--text-secondary);">
+            <span>💳</span>
+            <div>
+              <strong style="color: var(--text-primary);">Medios de Pago:</strong>
+              <p id="infoPaymentText">Efectivo, tarjetas de débito/crédito y QR en todos los puestos.</p>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px; font-size: 0.82rem; color: var(--text-secondary);">
+            <span>🚑</span>
+            <div>
+              <strong style="color: var(--text-primary);">Punto de Encuentro y Primeros Auxilios:</strong>
+              <p id="infoFirstAidText">Junto al Domo Central (Puesto de la Cruz Roja y Seguridad).</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Operator Dashboard Direct Link -->
+        <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: var(--radius-lg); padding: 14px; text-align: center;">
+          <span style="font-size: 1.4rem;">🔐</span>
+          <h4 style="font-family: var(--font-heading); font-size: 0.95rem; font-weight: 800; color: #93c5fd; margin-top: 2px;">
+            Acceso para Staff y Operadores
+          </h4>
+          <p style="font-size: 0.76rem; color: var(--text-secondary); margin: 2px 0 10px 0;">
+            Gestión de horarios, stock de stands y avisos flash.
+          </p>
+          <a href="./admin.html" class="btn-primary-action" style="background: var(--admin-accent, #3b82f6); font-size: 0.85rem; padding: 10px; text-decoration: none;">
+            ⚙️ Abrir Panel de Operadores
+          </a>
+        </div>
+
+        <!-- Sponsors Section -->
+        <div class="sponsors-section">
+          <div class="sponsor-tier-title">Main Sponsors Oficiales</div>
+          <div class="sponsors-logos-grid" id="goldSponsorsGrid">
+            <!-- Injected by JS -->
+          </div>
+
+          <div class="sponsor-tier-title" style="margin-top: 8px;">Marcas Aliadas & Colaboradores</div>
+          <div class="sponsors-logos-grid" id="silverSponsorsGrid">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- ====================================================================
+         BOTTOM NAVIGATION BAR (NATIVE MOBILE APP STYLE)
+         ==================================================================== -->
+    <nav class="bottom-nav">
+      <div class="bottom-nav-inner">
+        <button class="nav-item live-indicator active" data-tab="live" aria-label="En Vivo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"></circle><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"></path></svg>
+          <span>En Vivo</span>
+        </button>
+
+        <button class="nav-item" data-tab="agenda" aria-label="Agenda">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span>Agenda</span>
+        </button>
+
+        <button class="nav-item" data-tab="stands" aria-label="Stands">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+          <span>Stands</span>
+        </button>
+
+        <button class="nav-item" data-tab="sorteo" aria-label="Sorteo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg>
+          <span>Sorteo</span>
+        </button>
+
+        <button class="nav-item" data-tab="info" aria-label="Info & Mapa">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <span>Info</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- ====================================================================
+         MODALS & FLOATING DRAWERS
+         ==================================================================== -->
+    
+    <!-- Stand Menu Bottom Sheet Modal -->
+    <div class="modal-overlay" id="standModalOverlay">
+      <div class="bottom-sheet" id="standModalContent">
+        <!-- Injected dynamically by Stands JS -->
+      </div>
+    </div>
+
+    <!-- Live Roulette / Sorteador Modal -->
+    <div class="modal-overlay" id="rouletteModalOverlay">
+      <div class="bottom-sheet" style="text-align: center;">
+        <div class="sheet-handle"></div>
+        <button class="btn-close-modal" onclick="Raffle.closeHostRouletteModal()" aria-label="Cerrar">✕</button>
+
+        <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 900; color: #fef08a;">
+          🎡 Ruleta Oficial en Vivo
+        </h3>
+        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: -6px;">
+          Sortea entre todos los participantes registrados en la feria.
+        </p>
+
+        <div class="roulette-container">
+          <div class="roulette-wheel-wrapper">
+            <div class="roulette-pointer"></div>
+            <canvas id="rouletteCanvas"></canvas>
+          </div>
+
+          <button class="btn-primary-action" onclick="Raffle.spinWheel()" style="width: 100%; font-size: 1.1rem; background: var(--gold-gradient); color: #000;">
+            🎲 ¡GIRAR RULETA AHORA!
+          </button>
+
+          <div id="rouletteWinnerBox" class="winner-announcement-box" style="display: none;">
+            <!-- Winner dynamically announced here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+  </div>
+
+  <!-- Firebase Compat SDKs (Optional / Cloud Mode) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <!-- Application Logic Modules -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/db-adapter.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/live-radar.js"></script>
+  <script src="js/agenda.js"></script>
+  <script src="js/stands.js"></script>
+  <script src="js/raffle.js"></script>
+  <script src="js/sync.js"></script>
+  <script src="js/pwa.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

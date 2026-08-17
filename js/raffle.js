@@ -1,0 +1,349 @@
+/**
+ * GASTROFEST 2026 - RAFFLE & DIGITAL TICKET MODULE
+ * Fast registration, offline golden ticket with QR generator, and interactive live host roulette
+ */
+
+const Raffle = {
+  currentTicket: null,
+  participants: [],
+  isSpinning: false,
+
+  init() {
+    this.loadTicket();
+    this.loadParticipants();
+    this.populateStandSelect();
+    this.setupListeners();
+    this.render();
+  },
+
+  loadTicket() {
+    try {
+      const saved = localStorage.getItem('gastrofest_user_ticket');
+      this.currentTicket = saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      this.currentTicket = null;
+    }
+  },
+
+  loadParticipants() {
+    try {
+      const saved = localStorage.getItem('gastrofest_participants');
+      if (saved) {
+        this.participants = JSON.parse(saved);
+      } else {
+        // Seed default participants for live roulette fun demo
+        this.participants = [
+          { name: "Martín Gómez", phone: "11-4521-9988", code: "GF-8412", stand: "La Fogonera Asados" },
+          { name: "Camila Navarro", phone: "11-8844-3211", code: "GF-3904", stand: "Smash Burger Mafia" },
+          { name: "Gonzalo Benítez", phone: "11-6632-1100", code: "GF-7721", stand: "Green Garden Plant Based" },
+          { name: "Luciana Rossi", phone: "11-9922-4411", code: "GF-1049", stand: "Tokyo Ramen & Bao" },
+          { name: "Facundo Morales", phone: "11-3321-8877", code: "GF-5532", stand: "Cervecería Patagonia" }
+        ];
+        this.saveParticipants();
+      }
+    } catch (e) {
+      this.participants = [];
+    }
+  },
+
+  saveParticipants() {
+    try {
+      localStorage.setItem('gastrofest_participants', JSON.stringify(this.participants));
+    } catch (e) {
+      console.warn('Could not save participants');
+    }
+  },
+
+  populateStandSelect() {
+    const select = document.getElementById('raffleStandSelect');
+    if (!select) return;
+    select.innerHTML = '<option value="">-- Selecciona tu stand favorito --</option>';
+    GASTRO_DATA.stands.forEach(st => {
+      const opt = document.createElement('option');
+      opt.value = st.name;
+      opt.textContent = `${st.number} - ${st.name}`;
+      select.appendChild(opt);
+    });
+  },
+
+  setupListeners() {
+    const form = document.getElementById('raffleRegistrationForm');
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handleRegister();
+      });
+    }
+  },
+
+  handleRegister() {
+    const nameInput = document.getElementById('raffleName');
+    const phoneInput = document.getElementById('rafflePhone');
+    const standSelect = document.getElementById('raffleStandSelect');
+
+    const name = nameInput.value.trim();
+    const phone = phoneInput.value.trim();
+    const stand = standSelect.value || 'GastroFest 2026';
+
+    if (!name || !phone) {
+      App.showToast('⚠️ Por favor completa tu nombre y WhatsApp');
+      return;
+    }
+
+    // Generate random 4-digit serial
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    const code = `GF-${randomNum}`;
+
+    const newTicket = {
+      code,
+      name,
+      phone,
+      stand,
+      issuedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      eventName: GASTRO_DATA.event.name
+    };
+
+    this.currentTicket = newTicket;
+    localStorage.setItem('gastrofest_user_ticket', JSON.stringify(newTicket));
+
+    // Save into participants list
+    this.participants.push(newTicket);
+    this.saveParticipants();
+
+    App.playFanfare();
+    App.launchConfetti();
+    App.showToast(`🎉 ¡Ticket #${code} generado con éxito!`);
+    this.render();
+  },
+
+  drawQRCode(code) {
+    const canvas = document.getElementById('ticketQrCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const size = 110;
+    canvas.width = size;
+    canvas.height = size;
+
+    // Draw stylized QR matrix simulation
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+
+    ctx.fillStyle = '#111827';
+    // Draw corner markers
+    const drawMarker = (x, y) => {
+      ctx.fillRect(x, y, 24, 24);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x + 4, y + 4, 16, 16);
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(x + 8, y + 8, 8, 8);
+    };
+
+    drawMarker(6, 6);
+    drawMarker(size - 30, 6);
+    drawMarker(6, size - 30);
+
+    // Random consistent hash grid based on code
+    let hash = 0;
+    for (let i = 0; i < code.length; i++) hash = code.charCodeAt(i) + ((hash << 5) - hash);
+    
+    for (let r = 0; r < 14; r++) {
+      for (let c = 0; c < 14; c++) {
+        if ((r < 5 && c < 5) || (r < 5 && c > 8) || (r > 8 && c < 5)) continue;
+        if (((hash + (r * 13) + (c * 7)) % 3) === 0) {
+          ctx.fillRect(8 + c * 7, 8 + r * 7, 5, 5);
+        }
+      }
+    }
+
+    // Draw center brand dot
+    ctx.fillStyle = '#ff5e1e';
+    ctx.fillRect(size / 2 - 6, size / 2 - 6, 12, 12);
+  },
+
+  shareWhatsApp() {
+    if (!this.currentTicket) return;
+    const text = encodeURIComponent(
+      `🎟️ ¡Ya tengo mi Ticket Oficial para los sorteos de ${GASTRO_DATA.event.name}!\n` +
+      `📌 Mi número de la suerte: *#${this.currentTicket.code}*\n` +
+      `🍔 Mi stand favorito: ${this.currentTicket.stand}\n` +
+      `¡Nos vemos en el Parque Central!`
+    );
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+  },
+
+  copyTicketCode() {
+    if (!this.currentTicket) return;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(this.currentTicket.code).then(() => {
+        App.showToast('📋 Código de ticket copiado al portapapeles');
+      });
+    } else {
+      App.showToast(`📋 Código: ${this.currentTicket.code}`);
+    }
+  },
+
+  openHostRouletteModal() {
+    const modal = document.getElementById('rouletteModalOverlay');
+    if (!modal) return;
+    modal.classList.add('active');
+    this.drawRouletteWheel(0);
+  },
+
+  closeHostRouletteModal() {
+    const modal = document.getElementById('rouletteModalOverlay');
+    if (modal) modal.classList.remove('active');
+  },
+
+  drawRouletteWheel(rotationAngle = 0) {
+    const canvas = document.getElementById('rouletteCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const size = 260;
+    canvas.width = size;
+    canvas.height = size;
+
+    const centerX = size / 2;
+    const centerY = size / 2;
+    const radius = size / 2 - 4;
+
+    const items = this.participants.length > 0 ? this.participants : [
+      { name: "Participante 1", code: "GF-101" },
+      { name: "Participante 2", code: "GF-202" },
+      { name: "Participante 3", code: "GF-303" },
+      { name: "Participante 4", code: "GF-404" }
+    ];
+
+    const sliceAngle = (2 * Math.PI) / items.length;
+    const colors = ['#FF5E1E', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#EF4444', '#14B8A6'];
+
+    ctx.clearRect(0, 0, size, size);
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(rotationAngle);
+
+    items.forEach((item, i) => {
+      const angle = i * sliceAngle;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, radius, angle, angle + sliceAngle);
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.fill();
+      ctx.strokeStyle = '#1f1f2a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Text label
+      ctx.save();
+      ctx.rotate(angle + sliceAngle / 2);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 11px Outfit, sans-serif';
+      ctx.shadowColor = 'rgba(0,0,0,0.8)';
+      ctx.shadowBlur = 4;
+      ctx.fillText(item.code, radius - 15, 4);
+      ctx.restore();
+    });
+
+    // Center hub
+    ctx.beginPath();
+    ctx.arc(0, 0, 24, 0, 2 * Math.PI);
+    ctx.fillStyle = '#121214';
+    ctx.fill();
+    ctx.strokeStyle = '#F59E0B';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 12px Outfit, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🎁', 0, 0);
+
+    ctx.restore();
+  },
+
+  spinWheel() {
+    if (this.isSpinning) return;
+    this.isSpinning = true;
+
+    const winnerBox = document.getElementById('rouletteWinnerBox');
+    if (winnerBox) winnerBox.style.display = 'none';
+
+    const canvas = document.getElementById('rouletteCanvas');
+    const items = this.participants.length > 0 ? this.participants : [{ name: "Martín", code: "GF-8412" }];
+    
+    const winningIndex = Math.floor(Math.random() * items.length);
+    const winner = items[winningIndex];
+
+    const sliceAngle = (360 / items.length);
+    // Calculate final angle to land on pointer (pointer is at top 270 deg)
+    const extraRotations = (5 + Math.floor(Math.random() * 4)) * 360;
+    const targetAngle = extraRotations + (360 - (winningIndex * sliceAngle + sliceAngle / 2) + 270) % 360;
+
+    let startTime = null;
+    const duration = 4000; // 4 seconds
+
+    const animateSpin = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      // Ease out cubic
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      const currentDeg = easeProgress * targetAngle;
+
+      this.drawRouletteWheel((currentDeg * Math.PI) / 180);
+
+      // Play tick sound every ~45 deg
+      if (Math.floor(currentDeg / 40) !== this.lastTick) {
+        this.lastTick = Math.floor(currentDeg / 40);
+        App.playBeep(440 + (progress * 200), 0.03);
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(animateSpin);
+      } else {
+        this.isSpinning = false;
+        App.playFanfare();
+        App.launchConfetti();
+        if (winnerBox) {
+          winnerBox.innerHTML = `
+            <div style="font-size: 1.8rem; margin-bottom: 4px;">🎉🏆🎉</div>
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: #fcd34d; font-weight: 800;">¡GANADOR DEL SORTEO!</div>
+            <div style="font-family: var(--font-heading); font-size: 1.6rem; font-weight: 900; color: #ffffff; margin: 4px 0;">
+              #${winner.code}
+            </div>
+            <div style="font-size: 1.1rem; font-weight: 800; color: #fef08a;">${winner.name}</div>
+            <div style="font-size: 0.78rem; color: #fde68a; margin-top: 4px;">Stand Favorito: ${winner.stand || 'GastroFest'}</div>
+          `;
+          winnerBox.style.display = 'block';
+        }
+      }
+    };
+
+    requestAnimationFrame(animateSpin);
+  },
+
+  render() {
+    const formSection = document.getElementById('raffleFormSection');
+    const ticketSection = document.getElementById('raffleTicketSection');
+
+    if (this.currentTicket) {
+      if (formSection) formSection.style.display = 'none';
+      if (ticketSection) {
+        ticketSection.style.display = 'block';
+        
+        // Update ticket values
+        document.getElementById('ticketSerialDisplay').textContent = `#${this.currentTicket.code}`;
+        document.getElementById('ticketHolderName').textContent = this.currentTicket.name;
+        document.getElementById('ticketHolderPhone').textContent = this.currentTicket.phone;
+        document.getElementById('ticketHolderStand').textContent = this.currentTicket.stand;
+        document.getElementById('ticketHolderTime').textContent = this.currentTicket.issuedAt;
+
+        // Render QR
+        this.drawQRCode(this.currentTicket.code);
+      }
+    } else {
+      if (formSection) formSection.style.display = 'block';
+      if (ticketSection) ticketSection.style.display = 'none';
+    }
+  }
+};

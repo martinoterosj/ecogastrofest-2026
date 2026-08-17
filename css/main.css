@@ -1,0 +1,363 @@
+/* ==========================================================================
+   ECOGASTROFEST 2026 - ECO SUSTAINABLE DESIGN SYSTEM
+   Botanical Gourmet Dark Theme & Fully Responsive Layout (PC & Mobile)
+   ========================================================================== */
+
+:root {
+  /* Botanical Eco Dark Color Palette */
+  --bg-primary: #07110c;
+  --bg-secondary: #0e1e17;
+  --bg-tertiary: #162c22;
+  --bg-card: rgba(14, 30, 23, 0.88);
+  --bg-card-hover: rgba(22, 44, 34, 0.95);
+  --bg-glass: rgba(10, 22, 16, 0.86);
+  --border-subtle: rgba(52, 211, 153, 0.14);
+  --border-focus: rgba(16, 185, 129, 0.45);
+
+  /* Eco Green & Earth Accent Colors */
+  --accent-primary: #10b981;
+  --accent-secondary: #34d399;
+  --accent-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --accent-leaf-gradient: linear-gradient(135deg, #34d399 0%, #10b981 50%, #047857 100%);
+  --accent-glow: rgba(16, 185, 129, 0.35);
+  
+  --color-live: #ef4444;
+  --color-live-glow: rgba(239, 68, 68, 0.45);
+  --color-success: #10b981;
+  --color-gold: #f59e0b;
+  --color-earth: #d97706;
+  --gold-gradient: linear-gradient(135deg, #fbbf24 0%, #d97706 50%, #b45309 100%);
+  --gold-ticket-bg: linear-gradient(145deg, #18221a 0%, #203324 50%, #121c14 100%);
+
+  /* Text Colors */
+  --text-primary: #f0fdf4;
+  --text-secondary: #a7d0ba;
+  --text-muted: #648f78;
+  --text-inverse: #07110c;
+
+  /* Typography */
+  --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Dimensions & Spacing */
+  --nav-height: 68px;
+  --header-height: 64px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 20px var(--accent-glow);
+}
+
+/* Reset & Box Sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--bg-primary);
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(52, 211, 153, 0.08) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(217, 119, 6, 0.04) 0%, transparent 60%);
+  background-attachment: fixed;
+  overflow-x: hidden;
+  line-height: 1.5;
+  padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 20px);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* App Container (Responsive: Mobile 520px | Tablet 860px | Desktop 1180px) */
+.app-container {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transition: max-width 0.3s ease;
+}
+
+/* App Top Header */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: calc(var(--safe-top) + 12px) 16px 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.brand-logo-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--accent-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 4px 14px var(--accent-glow);
+}
+
+.brand-info h1 {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.brand-info span {
+  font-size: 0.72rem;
+  color: var(--accent-secondary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Desktop Top Navigation Bar (Hidden on Mobile) */
+.desktop-nav-bar {
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.desktop-nav-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-heading);
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.desktop-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.desktop-nav-btn.active {
+  background: var(--accent-gradient);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 14px var(--accent-glow);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Status Indicator Pill */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: rgba(16, 185, 129, 0.16);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  transition: all 0.3s ease;
+}
+
+.status-pill.offline {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--color-gold);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.status-pill.online .status-dot {
+  box-shadow: 0 0 8px #34d399;
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.btn-icon-pill {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-icon-pill:active {
+  transform: scale(0.92);
+  background: var(--accent-primary);
+  color: white;
+}
+
+/* Main Content Views Manager */
+.tab-content-area {
+  flex: 1;
+  padding: 20px 16px 28px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.tab-pane {
+  display: none;
+  animation: fadeInTab 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tab-pane.active {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@keyframes fadeInTab {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Typography Helpers */
+h2.section-title {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+h2.section-title .badge-count {
+  font-size: 0.75rem;
+  background: var(--bg-tertiary);
+  color: var(--accent-secondary);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-weight: 800;
+}
+
+.section-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: -8px;
+  margin-bottom: 12px;
+}
+
+/* ==========================================================================
+   DESKTOP & TABLET MEDIA QUERIES (> 768px & > 1024px)
+   ========================================================================== */
+@media (min-width: 768px) {
+  body {
+    padding-bottom: 40px; /* No bottom nav on desktop */
+  }
+
+  .app-container {
+    max-width: 1180px;
+    width: 95%;
+  }
+
+  .app-header {
+    padding: 14px 24px;
+  }
+
+  .desktop-nav-bar {
+    display: flex;
+  }
+
+  .bottom-nav {
+    display: none !important;
+  }
+
+  /* Desktop Multi-column Layouts */
+  .desktop-two-col {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  .stands-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 16px !important;
+  }
+
+  .agenda-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+
+  .sponsors-logos-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 14px !important;
+  }
+}

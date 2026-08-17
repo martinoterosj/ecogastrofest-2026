@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Binaries & Logs
+*.log
+firebase.exe
+*.exe
+
+# System & OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

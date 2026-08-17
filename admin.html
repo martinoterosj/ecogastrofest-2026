@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GastroFest 2026 - Panel de Operadores (100% Dinámico)</title>
+  <meta name="theme-color" content="#0b0c10">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+
+  <div class="admin-wrapper">
+
+    <!-- Top Navigation Bar -->
+    <header class="admin-navbar">
+      <div class="admin-brand">
+        <span style="font-size: 1.5rem;">⚙️</span>
+        <div>
+          <h2>GastroFest Control</h2>
+          <span style="font-size: 0.72rem; color: var(--admin-accent); font-weight: 700;">PANEL DE ADMINISTRACIÓN DINÁMICO</span>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <a href="firebase_setup.html" class="btn-admin-action" style="text-decoration: none; background: rgba(52, 211, 153, 0.15); color: #34d399; font-weight: 800;">
+          ☁️ Conectar Firebase
+        </a>
+        <span class="admin-user-pill" id="operatorNameBadge">🔒 No autenticado</span>
+        <button class="btn-admin-action" onclick="AdminApp.logout()" title="Cerrar Sesión">Salir</button>
+      </div>
+    </header>
+
+    <!-- ====================================================================
+         1. LOGIN SECTION (PIN KEYPAD)
+         ==================================================================== -->
+    <section id="adminLoginSection" class="login-card">
+      <div>
+        <span style="font-size: 2.2rem;">🔐</span>
+        <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; margin-top: 6px;">Acceso de Operadores</h3>
+        <p style="font-size: 0.82rem; color: var(--text-secondary);">Ingresa tu PIN de 4 dígitos para gestionar el festival en tiempo real.</p>
+      </div>
+
+      <div class="pin-display-box" id="pinDisplay">----</div>
+
+      <div class="keypad-grid">
+        <button class="btn-keypad" data-val="1">1</button>
+        <button class="btn-keypad" data-val="2">2</button>
+        <button class="btn-keypad" data-val="3">3</button>
+        <button class="btn-keypad" data-val="4">4</button>
+        <button class="btn-keypad" data-val="5">5</button>
+        <button class="btn-keypad" data-val="6">6</button>
+        <button class="btn-keypad" data-val="7">7</button>
+        <button class="btn-keypad" data-val="8">8</button>
+        <button class="btn-keypad" data-val="9">9</button>
+        <button class="btn-keypad" data-val="clear" style="font-size: 1rem; color: var(--admin-danger);">BORRAR</button>
+        <button class="btn-keypad" data-val="0">0</button>
+        <button class="btn-keypad" data-val="enter" style="font-size: 1rem; color: var(--color-success);">ENTRAR</button>
+      </div>
+
+      <div class="quick-roles-pills">
+        <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">PINs de Demostración:</span>
+        <button class="btn-quick-role" onclick="AdminApp.quickLogin('1234')">👑 <strong>PIN: 1234</strong> — Organizador Principal (Control Total)</button>
+        <button class="btn-quick-role" onclick="AdminApp.quickLogin('2026')">🎤 <strong>PIN: 2026</strong> — Coordinador de Escenarios</button>
+        <button class="btn-quick-role" onclick="AdminApp.quickLogin('7777')">🍔 <strong>PIN: 7777</strong> — Operador de Puestos Gastronómicos</button>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         2. DASHBOARD MANAGEMENT SECTION
+         ==================================================================== -->
+    <section id="adminDashboardSection" style="display: none; flex-direction: column; gap: 16px;">
+
+      <!-- Admin Tabs Navigation -->
+      <nav class="admin-tabs-nav" style="grid-template-columns: repeat(5, 1fr);">
+        <button class="admin-tab-btn active" data-tab="schedule">
+          <span>🎤</span>
+          <span>Shows</span>
+        </button>
+        <button class="admin-tab-btn" data-tab="stands">
+          <span>🍔</span>
+          <span>Stands</span>
+        </button>
+        <button class="admin-tab-btn" data-tab="announcements">
+          <span>📢</span>
+          <span>Avisos</span>
+        </button>
+        <button class="admin-tab-btn" data-tab="raffle">
+          <span>🎟️</span>
+          <span>Sorteos</span>
+        </button>
+        <button class="admin-tab-btn" data-tab="config">
+          <span>⚙️</span>
+          <span>Ajustes</span>
+        </button>
+      </nav>
+
+      <!-- ================================================================
+           TAB 1: SCHEDULE CRUD (Shows)
+           ================================================================ -->
+      <div class="admin-pane admin-card-box" id="pane-schedule">
+        <div class="admin-section-header">
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 800;">Gestión de Shows & Cronograma</h3>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">Crea nuevas actividades, edita datos de expositores o elimina eventos.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-admin-create" onclick="AdminApp.openNewShowModal()">
+              ➕ Nuevo Show
+            </button>
+            <button class="btn-admin-action" onclick="AdminApp.fetchState()">🔄 Refrescar</button>
+          </div>
+        </div>
+
+        <div id="adminScheduleList" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Injected by admin.js -->
+        </div>
+      </div>
+
+      <!-- ================================================================
+           TAB 2: STANDS & MENU CRUD (Puestos y Platos)
+           ================================================================ -->
+      <div class="admin-pane admin-card-box" id="pane-stands" style="display: none;">
+        <div class="admin-section-header">
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 800;">Gestión de Stands & Menús</h3>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">Altas, bajas y modificaciones de puestos, platos, precios y stock.</p>
+          </div>
+          <button class="btn-admin-create" onclick="AdminApp.openNewStandModal()">
+            ➕ Nuevo Stand
+          </button>
+        </div>
+
+        <div class="admin-form-group">
+          <label>Seleccionar Puesto Gastronómico Activo:</label>
+          <select id="adminStandSelect" style="background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 12px; border-radius: var(--radius-md); font-family: var(--font-body); font-size: 0.95rem; font-weight: 700;">
+            <!-- Options injected by admin.js -->
+          </select>
+        </div>
+
+        <div id="adminStandDetailsHeader"></div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+          <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 800;">Platos en Carta del Stand</h4>
+          <button class="btn-admin-action btn-success" onclick="AdminApp.openNewDishModal()">
+            ➕ Agregar Plato
+          </button>
+        </div>
+
+        <div id="adminStandMenuList" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Injected by admin.js -->
+        </div>
+      </div>
+
+      <!-- ================================================================
+           TAB 3: FLASH ANNOUNCEMENTS CRUD
+           ================================================================ -->
+      <div class="admin-pane admin-card-box" id="pane-announcements" style="display: none;">
+        <div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 800;">Lanzar Aviso Flash a los Asistentes</h3>
+          <p style="font-size: 0.8rem; color: var(--text-secondary);">Se mostrará como banner destacado superior en las pantallas de todos los móviles.</p>
+        </div>
+
+        <form onsubmit="AdminApp.postAnnouncement(event)" style="display: flex; flex-direction: column; gap: 10px; background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+          <div style="display: grid; grid-template-columns: 80px 1fr; gap: 10px;">
+            <div>
+              <label style="font-size: 0.72rem; font-weight: 800; color: var(--text-muted);">ICONO</label>
+              <select id="annIcon" style="width: 100%; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 10px; border-radius: var(--radius-sm); font-size: 1.1rem;">
+                <option value="📢">📢 General</option>
+                <option value="🍷">🍷 Catas</option>
+                <option value="🔥">🔥 Brasas</option>
+                <option value="🎟️">🎟️ Sorteos</option>
+                <option value="⚠️">⚠️ Urgente</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.72rem; font-weight: 800; color: var(--text-muted);">TÍTULO CORTO</label>
+              <input type="text" id="annTitle" placeholder="Ej: ¡Últimos 10 lugares para la Cata!" required style="width: 100%; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 10px; border-radius: var(--radius-sm);">
+            </div>
+          </div>
+
+          <div>
+            <label style="font-size: 0.72rem; font-weight: 800; color: var(--text-muted);">MENSAJE DETALLADO</label>
+            <input type="text" id="annMessage" placeholder="Ej: Acércate ahora al Domo Gourmet para degustar etiquetas exclusivas." required style="width: 100%; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 10px; border-radius: var(--radius-sm);">
+          </div>
+
+          <button type="submit" class="btn-admin-action" style="background: var(--admin-accent); padding: 12px; font-size: 0.95rem; justify-content: center; font-weight: 800;">
+            🚀 Publicar Aviso Flash Inmediato
+          </button>
+        </form>
+
+        <h4 style="font-size: 0.95rem; font-weight: 800; margin-top: 10px;">Avisos Activos Actualmente</h4>
+        <div id="adminAnnouncementsList" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Injected by admin.js -->
+        </div>
+      </div>
+
+      <!-- ================================================================
+           TAB 4: RAFFLE CRUD & CSV
+           ================================================================ -->
+      <div class="admin-pane admin-card-box" id="pane-raffle" style="display: none;">
+        <div style="text-align: center; padding: 14px 0;">
+          <span style="font-size: 2.8rem;">🎟️</span>
+          <h3 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 900; color: #fef08a; margin-top: 4px;">Participantes del Sorteo</h3>
+          <div id="adminRaffleCount" style="font-size: 1.1rem; font-weight: 800; color: white; margin-top: 4px;">Cargando...</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <button class="btn-primary-action" onclick="AdminApp.exportCSV()" style="background: linear-gradient(135deg, #10b981, #059669); font-size: 0.92rem;">
+            📥 Descargar CSV / Excel
+          </button>
+          <a href="./index.html" target="_blank" class="btn-primary-action" style="background: var(--gold-gradient); color: black; font-size: 0.92rem; text-decoration: none;">
+            🎡 Abrir Ruleta en Escenario
+          </a>
+        </div>
+
+        <h4 style="font-size: 0.95rem; font-weight: 800; margin-top: 14px;">Lista de Participantes Registrados</h4>
+        <div id="adminRaffleParticipantsList" style="display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto;">
+          <!-- Injected by admin.js -->
+        </div>
+      </div>
+
+      <!-- ================================================================
+           TAB 5: CONFIGURACIÓN GENERAL, CATEGORÍAS & ESCENARIOS (100% DINÁMICO)
+           ================================================================ -->
+      <div class="admin-pane admin-card-box" id="pane-config" style="display: none;">
+        <div>
+          <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 800;">Ajustes Generales del Evento</h3>
+          <p style="font-size: 0.8rem; color: var(--text-secondary);">Modifica el nombre, fechas, enlaces y gestiona todas las categorías dinámicamente.</p>
+        </div>
+
+        <!-- 1. Event Details Form -->
+        <form onsubmit="AdminApp.saveEventConfig(event)" style="background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 12px;">
+          <h4 style="font-family: var(--font-heading); font-size: 1rem; font-weight: 800; color: var(--admin-accent);">Información Básica</h4>
+          
+          <div class="admin-form-grid">
+            <div class="admin-form-group">
+              <label>Nombre del Evento *</label>
+              <input type="text" id="cfgEventName" required>
+            </div>
+            <div class="admin-form-group">
+              <label>Edición / Subtítulo</label>
+              <input type="text" id="cfgEventEdition">
+            </div>
+            <div class="admin-form-group">
+              <label>Fecha Oficial</label>
+              <input type="text" id="cfgEventDate">
+            </div>
+            <div class="admin-form-group">
+              <label>Horarios</label>
+              <input type="text" id="cfgEventHours">
+            </div>
+            <div class="admin-form-group full-width">
+              <label>Lugar / Predio Ferial</label>
+              <input type="text" id="cfgEventVenue">
+            </div>
+            <div class="admin-form-group full-width">
+              <label>Dirección y Accesos</label>
+              <input type="text" id="cfgEventAddress">
+            </div>
+            <div class="admin-form-group">
+              <label>Enlace Google Maps</label>
+              <input type="url" id="cfgEventMaps">
+            </div>
+            <div class="admin-form-group">
+              <label>Enlace Waze</label>
+              <input type="url" id="cfgEventWaze">
+            </div>
+            <div class="admin-form-group full-width">
+              <label>Info Estacionamiento</label>
+              <input type="text" id="cfgEventParking">
+            </div>
+          </div>
+
+          <button type="submit" class="btn-admin-create" style="align-self: flex-end;">
+            💾 Guardar Datos del Evento
+          </button>
+        </form>
+
+        <!-- 2. Manage Show Categories -->
+        <div style="background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+          <h4 style="font-family: var(--font-heading); font-size: 1rem; font-weight: 800; margin-bottom: 8px;">Categorías de Shows & Cronograma</h4>
+          <div id="adminShowCategoriesList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;"></div>
+          
+          <form onsubmit="AdminApp.addCategory(event, 'show')" style="display: flex; gap: 8px;">
+            <input type="text" id="newShowCatIcon" placeholder="Icono (ej. 🎤)" style="width: 100px; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
+            <input type="text" id="newShowCatName" placeholder="Nombre de categoría (ej. Magia)" required style="flex: 1; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
+            <button type="submit" class="btn-admin-action btn-success">➕ Agregar</button>
+          </form>
+        </div>
+
+        <!-- 3. Manage Stand Categories -->
+        <div style="background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+          <h4 style="font-family: var(--font-heading); font-size: 1rem; font-weight: 800; margin-bottom: 8px;">Categorías de Stands Gastronómicos</h4>
+          <div id="adminStandCategoriesList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;"></div>
+          
+          <form onsubmit="AdminApp.addCategory(event, 'stand')" style="display: flex; gap: 8px;">
+            <input type="text" id="newStandCatIcon" placeholder="Icono (ej. 🍕)" style="width: 100px; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
+            <input type="text" id="newStandCatName" placeholder="Nombre de categoría (ej. Pizzas & Calzones)" required style="flex: 1; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
+            <button type="submit" class="btn-admin-action btn-success">➕ Agregar</button>
+          </form>
+        </div>
+
+        <!-- 4. Manage Stages / Escenarios -->
+        <div style="background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+          <h4 style="font-family: var(--font-heading); font-size: 1rem; font-weight: 800; margin-bottom: 8px;">Escenarios & Domos</h4>
+          <div id="adminStagesList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;"></div>
+          
+          <form onsubmit="AdminApp.addStage(event)" style="display: flex; gap: 8px;">
+            <input type="text" id="newStageIcon" placeholder="Icono (ej. 🎪)" style="width: 100px; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
+            <input type="text" id="newStageName" placeholder="Nombre del escenario (ej. Domo Acústico)" required style="flex: 1; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
+            <button type="submit" class="btn-admin-action btn-success">➕ Agregar</button>
+          </form>
+        </div>
+
+        <!-- 5. Manage Sponsors -->
+        <div style="background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+          <h4 style="font-family: var(--font-heading); font-size: 1rem; font-weight: 800; margin-bottom: 8px;">Sponsors & Marcas Aliadas (con Logo)</h4>
+          <div id="adminSponsorsList" style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;"></div>
+          
+          <form onsubmit="AdminApp.addSponsor(event)" style="display: grid; grid-template-columns: 90px 1fr 1fr 1fr 100px; gap: 8px;">
+            <select id="newSponsorTier" style="background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
+              <option value="gold">Gold ⭐</option>
+              <option value="silver">Silver 🥈</option>
+            </select>
+            <input type="text" id="newSponsorName" placeholder="Nombre de marca" required style="background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
+            <input type="text" id="newSponsorLabel" placeholder="Tipo (ej. Vaso Eco-Oficial)" required style="background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
+            <input type="url" id="newSponsorLogo" placeholder="URL Logo (https://...)" style="background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 8px; border-radius: var(--radius-sm);">
+            <button type="submit" class="btn-admin-action btn-success">➕ Agregar</button>
+          </form>
+        </div>
+
+      </div>
+
+    </section>
+
+  </div>
+
+  <!-- ====================================================================
+       MODAL 1: ALTA / MODIFICACIÓN DE SHOW
+       ==================================================================== -->
+  <div class="admin-modal-overlay" id="modalShowOverlay">
+    <div class="admin-modal-box">
+      <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 900;" id="modalShowTitle">Show / Actividad</h3>
+      
+      <form id="formShowModal" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="admin-form-grid">
+          <div class="admin-form-group full-width">
+            <label>Título del Show o Masterclass *</label>
+            <input type="text" id="showTitleInput" required placeholder="Ej: Masterclass de Cortes Criollos">
+          </div>
+
+          <div class="admin-form-group">
+            <label>Chef / Expositor / Artista *</label>
+            <input type="text" id="showSpeakerInput" required placeholder="Ej: Chef Marcos Valenzuela">
+          </div>
+
+          <div class="admin-form-group">
+            <label>Emoji / Avatar</label>
+            <input type="text" id="showAvatarInput" value="👨‍🍳" placeholder="👨‍🍳">
+          </div>
+
+          <div class="admin-form-group">
+            <label>Hora Inicio (HH:MM) *</label>
+            <input type="text" id="showStartInput" required placeholder="14:30">
+          </div>
+
+          <div class="admin-form-group">
+            <label>Hora Fin (HH:MM) *</label>
+            <input type="text" id="showEndInput" required placeholder="15:45">
+          </div>
+
+          <div class="admin-form-group">
+            <label>Escenario *</label>
+            <select id="showStageInput">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+
+          <div class="admin-form-group">
+            <label>Categoría *</label>
+            <select id="showCategoryInput">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+
+          <div class="admin-form-group">
+            <label>Etiqueta / Badge</label>
+            <input type="text" id="showBadgeInput" placeholder="Masterclass">
+          </div>
+
+          <div class="admin-form-group">
+            <label>Estado Inicial</label>
+            <select id="showStatusInput">
+              <option value="scheduled">⏰ Programado</option>
+              <option value="live">🔴 En Vivo Ahora</option>
+              <option value="delayed">⚠️ Con Retraso</option>
+              <option value="completed">✅ Finalizado</option>
+            </select>
+          </div>
+
+          <div class="admin-form-group full-width">
+            <label>Descripción del Show</label>
+            <textarea id="showDescInput" rows="3" placeholder="Detalles de lo que aprenderá o verá el público..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-actions-row">
+          <button type="button" class="btn-admin-action" onclick="AdminApp.closeShowModal()">Cancelar</button>
+          <button type="submit" class="btn-admin-create">💾 Guardar Show</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MODAL 2: ALTA / MODIFICACIÓN DE STAND
+       ==================================================================== -->
+  <div class="admin-modal-overlay" id="modalStandOverlay">
+    <div class="admin-modal-box">
+      <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 900;" id="modalStandTitle">Puesto Gastronómico</h3>
+      
+      <form id="formStandModal" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="admin-form-grid">
+          <div class="admin-form-group">
+            <label>Nombre del Stand *</label>
+            <input type="text" id="standNameInput" required placeholder="Ej: La Fogonera Asados">
+          </div>
+
+          <div class="admin-form-group">
+            <label>Número de Stand *</label>
+            <input type="text" id="standNumberInput" required placeholder="Ej: Stand #09">
+          </div>
+
+          <div class="admin-form-group">
+            <label>Sector / Zona *</label>
+            <input type="text" id="standZoneInput" required placeholder="Ej: Sector Fuego A">
+          </div>
+
+          <div class="admin-form-group">
+            <label>Categoría *</label>
+            <select id="standCategoryInput">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+
+          <div class="admin-form-group">
+            <label>Nombre de Categoría</label>
+            <input type="text" id="standCategoryNameInput" placeholder="Carnes & Brasas">
+          </div>
+
+          <div class="admin-form-group">
+            <label>Plato Estrella / Especialidad</label>
+            <input type="text" id="standDishInput" placeholder="Sándwich de Vacío Ahumado">
+          </div>
+
+          <div class="admin-form-group full-width">
+            <label>Emoji del Stand</label>
+            <input type="text" id="standEmojiInput" value="🥩" placeholder="🥩">
+          </div>
+
+          <div class="admin-form-group full-width" style="display: flex; gap: 20px; flex-direction: row; margin-top: 4px;">
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input type="checkbox" id="standSinTaccInput">
+              <span>🌾 Tiene Opciones Sin TACC</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input type="checkbox" id="standVeganInput">
+              <span>🌱 Tiene Opciones Veganas</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-actions-row">
+          <button type="button" class="btn-admin-action" onclick="AdminApp.closeStandModal()">Cancelar</button>
+          <button type="submit" class="btn-admin-create">💾 Guardar Stand</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MODAL 3: ALTA / MODIFICACIÓN DE PLATO DEL MENÚ
+       ==================================================================== -->
+  <div class="admin-modal-overlay" id="modalDishOverlay">
+    <div class="admin-modal-box">
+      <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 900;" id="modalDishTitle">Plato de Menú</h3>
+      
+      <form id="formDishModal" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="admin-form-group">
+          <label>Nombre del Plato *</label>
+          <input type="text" id="dishItemInput" required placeholder="Ej: Hamburguesa Doble Cheddar">
+        </div>
+
+        <div class="admin-form-group">
+          <label>Descripción / Ingredientes</label>
+          <textarea id="dishDescInput" rows="2" placeholder="Pan brioche, doble medallón, bacon crocante..."></textarea>
+        </div>
+
+        <div class="admin-form-group">
+          <label>Precio Oficial *</label>
+          <input type="text" id="dishPriceInput" required placeholder="$5.800">
+        </div>
+
+        <div class="admin-form-group">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="dishSoldOutInput">
+            <span>🔴 Marcar como AGOTADO (Sin Stock)</span>
+          </label>
+        </div>
+
+        <div class="modal-actions-row">
+          <button type="button" class="btn-admin-action" onclick="AdminApp.closeDishModal()">Cancelar</button>
+          <button type="submit" class="btn-admin-create">💾 Guardar Plato</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase Compat SDKs (Optional / Cloud Mode) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/db-adapter.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
