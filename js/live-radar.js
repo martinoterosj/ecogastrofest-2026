@@ -82,6 +82,12 @@ const LiveRadar = {
 
       liveContainer.innerHTML = `
         <div class="live-show-info">
+          ${liveEvent.image ? `
+            <div class="live-artist-banner" style="width:100%; height:140px; border-radius:var(--radius-md); overflow:hidden; margin-bottom:10px; border:1px solid rgba(52,211,153,0.3); position:relative;">
+              <img src="${liveEvent.image}" alt="${liveEvent.speaker}" style="width:100%; height:100%; object-fit:cover; object-position:center;">
+              <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, rgba(7,17,12,0.85) 100%);"></div>
+            </div>
+          ` : ''}
           <h3>${liveEvent.title}</h3>
           <div class="live-meta">
             <span class="meta-item">📍 ${liveEvent.stageName}</span>

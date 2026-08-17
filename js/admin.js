@@ -199,14 +199,20 @@ const AdminApp = {
             <div>${statusBadge}</div>
           </div>
 
-          <!-- Middle Row: Full Width Show Title -->
-          <div class="card-row-title">
-            <h4>${ev.speakerAvatar || '👨‍🍳'} ${ev.title}</h4>
+          <!-- Middle Row: Full Width Show Title + Image thumbnail if present -->
+          <div class="card-row-title" style="display:flex; align-items:center; gap:12px;">
+            ${ev.image ? `
+              <img src="${ev.image}" alt="${ev.speaker}" style="width:48px; height:48px; object-fit:cover; border-radius:var(--radius-sm); border:1px solid var(--admin-border-subtle); flex-shrink:0;">
+            ` : ''}
+            <div>
+              <h4>${ev.speakerAvatar || '👨‍🍳'} ${ev.title}</h4>
+              <span style="font-size:0.8rem; color:var(--text-secondary);">👤 ${ev.speaker}</span>
+            </div>
           </div>
 
           <!-- Info Row: Speaker + Time Range Pill -->
           <div class="card-row-meta">
-            <span>👤 ${ev.speaker}</span>
+            <span style="font-size:0.75rem; color:var(--text-muted);">${ev.category || 'Música'}</span>
             <span class="card-time-pill">🕒 ${ev.startTime} - ${ev.endTime}</span>
           </div>
 
@@ -264,6 +270,7 @@ const AdminApp = {
     document.getElementById('showStartInput').value = '15:00';
     document.getElementById('showEndInput').value = '16:00';
     document.getElementById('showBadgeInput').value = 'Masterclass';
+    if (document.getElementById('showImageInput')) document.getElementById('showImageInput').value = '';
     document.getElementById('showDescInput').value = '';
     document.getElementById('showStatusInput').value = 'scheduled';
 
@@ -286,6 +293,7 @@ const AdminApp = {
     if (document.getElementById('showStageInput')) document.getElementById('showStageInput').value = ev.stageName;
     if (document.getElementById('showCategoryInput')) document.getElementById('showCategoryInput').value = ev.category;
     document.getElementById('showBadgeInput').value = ev.badge || '';
+    if (document.getElementById('showImageInput')) document.getElementById('showImageInput').value = ev.image || '';
     document.getElementById('showDescInput').value = ev.description || '';
     document.getElementById('showStatusInput').value = ev.status || 'scheduled';
 
@@ -307,6 +315,7 @@ const AdminApp = {
       stageName: document.getElementById('showStageInput').value,
       category: document.getElementById('showCategoryInput').value,
       badge: document.getElementById('showBadgeInput').value.trim(),
+      image: document.getElementById('showImageInput') ? document.getElementById('showImageInput').value.trim() : '',
       description: document.getElementById('showDescInput').value.trim(),
       status: document.getElementById('showStatusInput').value
     };

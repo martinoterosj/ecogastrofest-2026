@@ -171,6 +171,11 @@ const Agenda = {
           </div>
 
           <h4>${ev.title}</h4>
+          ${ev.image ? `
+            <div class="agenda-artist-banner">
+              <img src="${ev.image}" alt="${ev.speaker}" loading="lazy">
+            </div>
+          ` : ''}
           <p class="desc">${ev.description || ''}</p>
 
           <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-subtle); padding-top: 8px; margin-top: 2px;">

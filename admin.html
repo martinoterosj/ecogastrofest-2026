@@ -29,9 +29,6 @@
       </div>
 
       <div class="admin-navbar-actions">
-        <a href="firebase_setup.html" class="btn-cloud-connect" title="Conectar Base de Datos Firestore">
-          ☁️ Conectar Firebase
-        </a>
         <span class="admin-user-pill" id="operatorNameBadge">🔒 No autenticado</span>
         <button class="btn-admin-action" onclick="AdminApp.logout()" title="Cerrar Sesión">Salir</button>
       </div>
@@ -405,6 +402,11 @@
               <option value="delayed">⚠️ Con Retraso</option>
               <option value="completed">✅ Finalizado</option>
             </select>
+          </div>
+
+          <div class="admin-form-group full-width">
+            <label>URL Imagen del Artista / Show (.webp)</label>
+            <input type="text" id="showImageInput" placeholder="images/artists/jaime-roos.webp">
           </div>
 
           <div class="admin-form-group full-width">
