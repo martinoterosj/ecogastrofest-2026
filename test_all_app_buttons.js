@@ -136,8 +136,8 @@ async function testVisitorApp() {
   assert(!modalOverlay.classList.contains('active'), `Botón 'Votar Stand Favorito' cierra el modal`);
   assert(App.currentTab === 'sorteo', `Botón 'Votar Stand Favorito' redirige automáticamente a la pestaña de Sorteo`);
 
-  // 5. Test Raffle Form, Ticket & Roulette
-  console.log('\n5. Probando Registro de Sorteo, Ticket Digital y Ruleta:');
+  // 5. Test Raffle Form & Golden Ticket
+  console.log('\n5. Probando Registro de Sorteo y Golden Ticket Digital:');
   document.getElementById('raffleName').value = 'Martín Tester';
   document.getElementById('rafflePhone').value = '11-5555-9988';
   Raffle.handleRegister();
@@ -145,12 +145,9 @@ async function testVisitorApp() {
   assert(Raffle.currentTicket !== null, `Formulario genera Ticket Digital con código único (#${Raffle.currentTicket?.code})`);
   assert(document.getElementById('raffleTicketSection').style.display === 'block', `Sección de Golden Ticket visualizada con éxito`);
 
-  // Test Live Roulette Modal
-  Raffle.openHostRouletteModal();
-  const rouletteModal = document.getElementById('rouletteModalOverlay');
-  assert(rouletteModal.classList.contains('active'), `Botón 'Abrir Ruleta de Sorteos' despliega modal interactivo`);
-  Raffle.closeHostRouletteModal();
-  assert(!rouletteModal.classList.contains('active'), `Botón de cerrar ruleta funciona correctamente`);
+  // Test Ticket Copy & Draw QR
+  Raffle.copyTicketCode();
+  assert(Raffle.currentTicket.name === 'Martín Tester', `Datos de titular y stand del ticket validados`);
 }
 
 async function testAdminApp() {

@@ -317,20 +317,6 @@
           </div>
         </div>
 
-        <!-- Host Live Sorteo Section Trigger -->
-        <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 16px; text-align: center;">
-          <span style="font-size: 1.6rem; display: block; margin-bottom: 4px;">🎡</span>
-          <h4 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 800; color: var(--text-primary);">
-            Panel de Sorteos en Escenario
-          </h4>
-          <p style="font-size: 0.78rem; color: var(--text-secondary); margin: 4px 0 12px 0;">
-            Herramienta interactiva para los conductores y animadores del festival en vivo.
-          </p>
-          <button class="btn-primary-action" style="background: linear-gradient(135deg, #f59e0b, #d97706); font-size: 0.92rem; padding: 10px;" onclick="Raffle.openHostRouletteModal()">
-            🎡 Abrir Ruleta de Sorteos en Vivo
-          </button>
-        </div>
-
       </section>
 
       <!-- ================================================================
@@ -463,36 +449,6 @@
     <div class="modal-overlay" id="standModalOverlay">
       <div class="bottom-sheet" id="standModalContent">
         <!-- Injected dynamically by Stands JS -->
-      </div>
-    </div>
-
-    <!-- Live Roulette / Sorteador Modal -->
-    <div class="modal-overlay" id="rouletteModalOverlay">
-      <div class="bottom-sheet" style="text-align: center;">
-        <div class="sheet-handle"></div>
-        <button class="btn-close-modal" onclick="Raffle.closeHostRouletteModal()" aria-label="Cerrar">✕</button>
-
-        <h3 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 900; color: #fef08a;">
-          🎡 Ruleta Oficial en Vivo
-        </h3>
-        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: -6px;">
-          Sortea entre todos los participantes registrados en la feria.
-        </p>
-
-        <div class="roulette-container">
-          <div class="roulette-wheel-wrapper">
-            <div class="roulette-pointer"></div>
-            <canvas id="rouletteCanvas"></canvas>
-          </div>
-
-          <button class="btn-primary-action" onclick="Raffle.spinWheel()" style="width: 100%; font-size: 1.1rem; background: var(--gold-gradient); color: #000;">
-            🎲 ¡GIRAR RULETA AHORA!
-          </button>
-
-          <div id="rouletteWinnerBox" class="winner-announcement-box" style="display: none;">
-            <!-- Winner dynamically announced here -->
-          </div>
-        </div>
       </div>
     </div>
 
