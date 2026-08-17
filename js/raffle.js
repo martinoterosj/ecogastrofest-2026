@@ -118,8 +118,9 @@ const Raffle = {
 
   drawQRCode(code) {
     const canvas = document.getElementById('ticketQrCanvas');
-    if (!canvas) return;
+    if (!canvas || !canvas.getContext) return;
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     const size = 110;
     canvas.width = size;
     canvas.height = size;
@@ -196,8 +197,9 @@ const Raffle = {
 
   drawRouletteWheel(rotationAngle = 0) {
     const canvas = document.getElementById('rouletteCanvas');
-    if (!canvas) return;
+    if (!canvas || !canvas.getContext) return;
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     const size = 260;
     canvas.width = size;
     canvas.height = size;

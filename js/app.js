@@ -204,7 +204,9 @@ const App = {
     canvas.style.zIndex = '9999';
     document.body.appendChild(canvas);
 
+    if (!canvas || !canvas.getContext) return;
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 

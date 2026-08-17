@@ -442,3 +442,10 @@ const GASTRO_DATA = {
     }
   ]
 };
+
+if (typeof window !== 'undefined') {
+  window.GASTRO_DATA = GASTRO_DATA;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = GASTRO_DATA;
+}
