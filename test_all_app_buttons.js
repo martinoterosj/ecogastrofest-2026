@@ -55,6 +55,9 @@ async function testVisitorApp() {
   const { window } = dom;
   const { document } = window;
 
+  // Mock window.prompt for JSDOM
+  window.prompt = (msg, def) => def || 'Martín Otero';
+
   const App = window.eval('App');
   const GASTRO_DATA = window.eval('GASTRO_DATA');
   const LiveRadar = window.eval('LiveRadar');

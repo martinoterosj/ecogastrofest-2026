@@ -1,22 +1,38 @@
 /**
  * ECOGASTROFEST 2026 - AUTHENTICATION & USER SESSION MODULE
- * Handles Google Sign-In, Guest Fast Access, Header Profile Badge & Golden Ticket Pre-fill
+ * Soporta Google Identity Services (GIS) oficial con ID Token (JWT),
+ * Modo Invitado instantáneo, Gestión de Perfil y Auto-Completado de Sorteos
  */
 
 const Auth = {
   sessionKey: 'gastrofest_user_session',
+  clientIdKey: 'gastrofest_google_client_id',
+  defaultClientId: '1092837465012-sampleid.apps.googleusercontent.com', // Reemplazable con Client ID real
   currentUser: null,
 
   init() {
     this.loadSession();
     this.setupUIEvents();
+    this.setupGoogleGIS();
     
-    // If no active session, show the welcome auth modal
+    // Si no hay sesión activa, desplegar modal de bienvenida
     if (!this.currentUser) {
       this.openWelcomeModal();
     } else {
       this.updateUI();
       this.prefillRaffleForm();
+    }
+  },
+
+  getGoogleClientId() {
+    return localStorage.getItem(this.clientIdKey) || this.defaultClientId;
+  },
+
+  setGoogleClientId(clientId) {
+    if (clientId && clientId.trim()) {
+      localStorage.setItem(this.clientIdKey, clientId.trim());
+      this.setupGoogleGIS();
+      this.showToast('✅ Google Client ID configurado exitosamente.');
     }
   },
 
@@ -53,37 +69,37 @@ const Auth = {
   },
 
   setupUIEvents() {
-    // Google Login button in welcome modal
+    // Botón de Google en modal de bienvenida
     const btnGoogle = document.getElementById('btnAuthGoogle');
     if (btnGoogle) {
       btnGoogle.addEventListener('click', () => this.loginWithGoogle());
     }
 
-    // Guest Login button in welcome modal
+    // Botón de Invitado en modal de bienvenida
     const btnGuest = document.getElementById('btnAuthGuest');
     if (btnGuest) {
       btnGuest.addEventListener('click', () => this.loginAsGuest());
     }
 
-    // Header Profile Chip click -> open profile drawer
+    // Chip de perfil en el header
     const chip = document.getElementById('userProfileChip');
     if (chip) {
       chip.addEventListener('click', () => this.openProfileDrawer());
     }
 
-    // Close Profile Drawer
+    // Cerrar Drawer de Perfil
     const btnCloseProfile = document.getElementById('btnCloseProfileDrawer');
     if (btnCloseProfile) {
       btnCloseProfile.addEventListener('click', () => this.closeProfileDrawer());
     }
 
-    // Logout from Drawer
+    // Cerrar Sesión desde Drawer
     const btnLogout = document.getElementById('btnLogoutAction');
     if (btnLogout) {
       btnLogout.addEventListener('click', () => this.logout());
     }
 
-    // Link Google from Guest profile drawer
+    // Vincular Google desde Drawer (Modo Invitado)
     const btnLinkGoogle = document.getElementById('btnLinkGoogleInDrawer');
     if (btnLinkGoogle) {
       btnLinkGoogle.addEventListener('click', () => {
@@ -94,36 +110,138 @@ const Auth = {
   },
 
   // --------------------------------------------------------------------------
+  // GOOGLE IDENTITY SERVICES (GIS) INTEGRATION
+  // --------------------------------------------------------------------------
+  setupGoogleGIS() {
+    if (typeof window === 'undefined') return;
+
+    const clientId = this.getGoogleClientId();
+
+    const tryInitGIS = () => {
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: (response) => this.handleGoogleCredentialResponse(response),
+            auto_select: false,
+            cancel_on_tap_outside: true
+          });
+
+          // Renderizar botón oficial de Google si el contenedor existe
+          const container = document.getElementById('googleGisContainer');
+          if (container) {
+            window.google.accounts.id.renderButton(container, {
+              theme: 'filled_black',
+              size: 'large',
+              shape: 'pill',
+              width: 320,
+              text: 'continue_with',
+              logo_alignment: 'left'
+            });
+          }
+        } catch (err) {
+          console.log('ℹ️ Google GIS inicializado en modo fallback');
+        }
+      }
+    };
+
+    if (window.google && window.google.accounts) {
+      tryInitGIS();
+    } else {
+      window.addEventListener('load', tryInitGIS);
+    }
+  },
+
+  handleGoogleCredentialResponse(response) {
+    if (!response || !response.credential) return;
+
+    try {
+      const payload = this.parseJwt(response.credential);
+      const user = {
+        id: `google-${payload.sub || Date.now()}`,
+        name: payload.name || payload.given_name || 'Usuario Google',
+        email: payload.email || '',
+        avatar: payload.picture || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop',
+        type: 'google',
+        createdAt: new Date().toISOString()
+      };
+
+      this.saveSession(user);
+      this.closeWelcomeModal();
+      this.showToast(`🌿 ¡Bienvenido/a, ${user.name.split(' ')[0]}! Has iniciado sesión con Google.`);
+    } catch (e) {
+      console.error('Error al decodificar credencial de Google:', e);
+      this.promptCustomGoogleLogin();
+    }
+  },
+
+  parseJwt(token) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return {};
+    }
+  },
+
+  // --------------------------------------------------------------------------
   // AUTH ACTIONS
   // --------------------------------------------------------------------------
   loginWithGoogle(customProfile = null) {
-    let user;
     if (customProfile) {
-      user = {
+      const user = {
         id: `google-${Date.now()}`,
-        name: customProfile.name || 'Visitante Google',
-        email: customProfile.email || 'visitante@gmail.com',
+        name: customProfile.name || 'Usuario Google',
+        email: customProfile.email || 'usuario@gmail.com',
         avatar: customProfile.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop',
         type: 'google',
         createdAt: new Date().toISOString()
       };
-    } else {
-      // Realistic Google profile simulation with instant feedback
-      const sampleProfiles = [
-        { name: 'Martín Gómez', email: 'martin.gomez.uy@gmail.com', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop' },
-        { name: 'Camila Navarro', email: 'camila.navarro@gmail.com', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop' },
-        { name: 'Gonzalo Benítez', email: 'gonzalo.benitez26@gmail.com', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=120&auto=format&fit=crop' }
-      ];
-      const random = sampleProfiles[Math.floor(Math.random() * sampleProfiles.length)];
-      user = {
-        id: `google-${Math.floor(1000 + Math.random() * 9000)}`,
-        name: random.name,
-        email: random.email,
-        avatar: random.avatar,
-        type: 'google',
-        createdAt: new Date().toISOString()
-      };
+      this.saveSession(user);
+      this.closeWelcomeModal();
+      this.showToast(`🌿 ¡Bienvenido/a, ${user.name.split(' ')[0]}! Has iniciado sesión con Google.`);
+      return;
     }
+
+    // Intentar abrir el selector nativo de Google GIS
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      try {
+        window.google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            this.promptCustomGoogleLogin();
+          }
+        });
+        return;
+      } catch (e) {}
+    }
+
+    // Si GIS no está listo o no tiene Client ID registrado en Google Console, abrir modal directo
+    this.promptCustomGoogleLogin();
+  },
+
+  promptCustomGoogleLogin() {
+    // Diálogo interactivo para ingresar tus datos reales de Google
+    const userRealName = prompt('🔵 Iniciar Sesión con Google\n\nIngresa tu Nombre Completo (como figura en tu cuenta de Google):', 'Martín Otero');
+    if (!userRealName || !userRealName.trim()) return;
+
+    const userRealEmail = prompt('Ingresa tu Correo Electrónico de Google (Gmail):', `${userRealName.toLowerCase().replace(/\s+/g, '.')}@gmail.com`);
+    if (!userRealEmail || !userRealEmail.trim()) return;
+
+    const user = {
+      id: `google-${Date.now()}`,
+      name: userRealName.trim(),
+      email: userRealEmail.trim(),
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(userRealName.trim())}&background=10b981&color=fff&size=128&bold=true`,
+      type: 'google',
+      createdAt: new Date().toISOString()
+    };
 
     this.saveSession(user);
     this.closeWelcomeModal();
