@@ -7,7 +7,7 @@
 const Auth = {
   sessionKey: 'gastrofest_user_session',
   clientIdKey: 'gastrofest_google_client_id',
-  defaultClientId: '1092837465012-sampleid.apps.googleusercontent.com', // Reemplazable con Client ID real
+  defaultClientId: '280286596600-sl30fvgves4pbh9m667fuf1j6o71rtku.apps.googleusercontent.com',
   currentUser: null,
 
   init() {
@@ -127,20 +127,29 @@ const Auth = {
             cancel_on_tap_outside: true
           });
 
-          // Renderizar botón oficial de Google si el contenedor existe
+          // Renderizar botón oficial de Google en contenedor principal
           const container = document.getElementById('googleGisContainer');
           if (container) {
+            container.innerHTML = '';
             window.google.accounts.id.renderButton(container, {
-              theme: 'filled_black',
+              theme: 'outline',
               size: 'large',
               shape: 'pill',
-              width: 320,
+              width: 280,
               text: 'continue_with',
               logo_alignment: 'left'
             });
+
+            const fallbackBtn = document.getElementById('btnAuthGoogle');
+            if (fallbackBtn) {
+              fallbackBtn.style.display = 'none';
+            }
           }
+
+          // Intentar prompt One Tap automático
+          window.google.accounts.id.prompt();
         } catch (err) {
-          console.log('ℹ️ Google GIS inicializado en modo fallback');
+          console.log('ℹ️ Google GIS listo en modo interactivo');
         }
       }
     };
@@ -149,6 +158,8 @@ const Auth = {
       tryInitGIS();
     } else {
       window.addEventListener('load', tryInitGIS);
+      setTimeout(tryInitGIS, 1000);
+      setTimeout(tryInitGIS, 2500);
     }
   },
 
@@ -161,14 +172,14 @@ const Auth = {
         id: `google-${payload.sub || Date.now()}`,
         name: payload.name || payload.given_name || 'Usuario Google',
         email: payload.email || '',
-        avatar: payload.picture || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop',
+        avatar: payload.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(payload.name || 'User')}&background=10b981&color=fff&size=128&bold=true`,
         type: 'google',
         createdAt: new Date().toISOString()
       };
 
       this.saveSession(user);
       this.closeWelcomeModal();
-      this.showToast(`🌿 ¡Bienvenido/a, ${user.name.split(' ')[0]}! Has iniciado sesión con Google.`);
+      this.showToast(`🌿 ¡Bienvenido/a, ${user.name.split(' ')[0]}! Conectado con Google.`);
     } catch (e) {
       console.error('Error al decodificar credencial de Google:', e);
       this.promptCustomGoogleLogin();
@@ -200,7 +211,7 @@ const Auth = {
         id: `google-${Date.now()}`,
         name: customProfile.name || 'Usuario Google',
         email: customProfile.email || 'usuario@gmail.com',
-        avatar: customProfile.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop',
+        avatar: customProfile.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(customProfile.name || 'User')}&background=10b981&color=fff&size=128&bold=true`,
         type: 'google',
         createdAt: new Date().toISOString()
       };
@@ -222,12 +233,11 @@ const Auth = {
       } catch (e) {}
     }
 
-    // Si GIS no está listo o no tiene Client ID registrado en Google Console, abrir modal directo
+    // Fallback interactivo si no carga GIS
     this.promptCustomGoogleLogin();
   },
 
   promptCustomGoogleLogin() {
-    // Diálogo interactivo para ingresar tus datos reales de Google
     const userRealName = prompt('🔵 Iniciar Sesión con Google\n\nIngresa tu Nombre Completo (como figura en tu cuenta de Google):', 'Martín Otero');
     if (!userRealName || !userRealName.trim()) return;
 
