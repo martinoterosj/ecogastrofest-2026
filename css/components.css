@@ -1863,4 +1863,186 @@
   border-color: #ef4444;
 }
 
+/* --------------------------------------------------------------------------
+   17. COMPREHENSIVE RESPONSIVE MOBILE CALIBRATIONS (< 480px, < 380px, < 340px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 480px) {
+  .auth-welcome-card {
+    max-width: min(400px, 94vw);
+    padding: 22px 16px 20px 16px;
+  }
+
+  .auth-badge-icon {
+    width: 54px;
+    height: 54px;
+    font-size: 1.7rem;
+    margin-bottom: 10px;
+  }
+
+  .auth-welcome-card h2 {
+    font-size: 1.4rem;
+  }
+
+  .auth-benefits-grid {
+    gap: 5px;
+    margin-bottom: 16px;
+  }
+
+  .benefit-pill {
+    padding: 6px 3px;
+  }
+
+  .benefit-pill span.b-icon {
+    font-size: 1rem;
+  }
+
+  .benefit-pill span.b-text {
+    font-size: 0.64rem;
+  }
+
+  .btn-auth-google, .btn-auth-guest {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 0.88rem;
+  }
+
+  .profile-drawer-card {
+    padding: 20px 16px calc(var(--safe-bottom) + 20px) 16px;
+    gap: 14px;
+  }
+
+  .profile-user-summary {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .profile-avatar-container {
+    width: 44px;
+    height: 44px;
+  }
+
+  .profile-info-col h4 {
+    font-size: 0.98rem;
+  }
+
+  .user-profile-chip {
+    max-width: 140px;
+    padding: 3px 8px 3px 4px;
+    font-size: 0.74rem;
+  }
+
+  #userChipName {
+    display: inline-block;
+    max-width: 65px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .show-artist-img {
+    aspect-ratio: 16/9;
+    width: 100%;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+  }
+
+  .visitor-map-card {
+    height: clamp(230px, 40vh, 320px) !important;
+  }
+
+  .ticket-serial {
+    font-size: clamp(1.35rem, 5.5vw, 1.75rem);
+  }
+}
+
+@media (max-width: 380px) {
+  .bottom-nav {
+    padding: 5px 6px calc(var(--safe-bottom) + 4px) 6px;
+  }
+
+  .bottom-nav-inner {
+    gap: 2px;
+  }
+
+  .nav-item {
+    padding: 3px 1px;
+    gap: 2px;
+  }
+
+  .nav-item svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .nav-item span {
+    font-size: 0.6rem;
+    letter-spacing: -0.02em;
+  }
+
+  .user-profile-chip {
+    max-width: 110px;
+    padding: 3px 6px 3px 3px;
+    font-size: 0.7rem;
+    gap: 5px;
+  }
+
+  #userChipName {
+    max-width: 45px;
+  }
+
+  .chip-avatar {
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+  }
+
+  .auth-welcome-card {
+    padding: 18px 12px 16px 12px;
+  }
+
+  .auth-welcome-card h2 {
+    font-size: 1.28rem;
+  }
+
+  .auth-welcome-card p.auth-subtitle {
+    font-size: 0.78rem;
+    margin-bottom: 14px;
+  }
+
+  .benefit-pill span.b-text {
+    font-size: 0.6rem;
+  }
+
+  .ticket-actions-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .live-show-info h3 {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 330px) {
+  .nav-item span {
+    font-size: 0.54rem;
+  }
+
+  .user-profile-chip {
+    padding: 3px 5px;
+  }
+
+  #userChipName {
+    display: none;
+  }
+
+  .benefit-pill span.b-text {
+    font-size: 0.56rem;
+  }
+
+  .auth-actions-stack {
+    gap: 8px;
+  }
+}
+
 

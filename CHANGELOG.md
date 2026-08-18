@@ -12,6 +12,19 @@ Todas las modificaciones, mejoras arquitectónicas, módulos y correcciones del 
 
 ---
 
+## [1.6.0] - 2026-08-18
+
+### Changed (Optimizaciones Responsivas y Calibración Móvil)
+- **Calibración Integral de Tamaños y Espaciados para Dispositivos Móviles (`css/main.css`, `css/components.css`, `css/admin.css`)**:
+  - **Cabecera Adaptativa (`.app-header`)**: En pantallas < 380px, los títulos y chips de usuario usan tipografía fluida `clamp()` con `ellipsis`, y la píldora de estado colapsa su texto secundario mostrando únicamente el indicador parpadeante en vivo, evitando cualquier desborde horizontal.
+  - **Navegación Inferior & Safe Areas (`.bottom-nav`)**: Calibración precisa para iPhones con Home Indicator y Androids con navegación por gestos (`padding-bottom: calc(var(--safe-bottom) + 6px)`), e iconos adaptados para pantallas ultra-compactas (320px / 360px).
+  - **Modales de Bienvenida & Auth (`#authWelcomeModal`)**: Rediseño con `max-width: min(400px, 94vw)`, reducción proporcional del padding interno y botones táctiles con altura mínima de 44px (estándar Apple/Google HIG).
+  - **Drawer de Perfil (`#userProfileDrawer`)**: Altura máxima y padding inferior calibrados para evitar colisiones con el teclado o la barra de gestos.
+  - **Tarjetas de Agenda & Artistas (`.show-card`)**: Fijada relación de aspecto `aspect-ratio: 16/9` con `object-fit: cover` para las imágenes WebP de artistas, eliminando saltos de diseño (*layout shift*).
+  - **Panel de Operadores Móvil (`admin.html` / `css/admin.css`)**: Barra de pestañas con desplazamiento horizontal inercial suave (`scrollbar-width: none`), formularios apilados en 1 columna en pantallas < 600px y tablas de gestión con scroll horizontal contenido.
+
+---
+
 ## [1.5.0] - 2026-08-18
 
 ### Added (Nuevas Funcionalidades)

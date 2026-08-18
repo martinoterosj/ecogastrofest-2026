@@ -1,7 +1,7 @@
 # 🌿 EcoGastroFest 2026 - Documento Maestro de Contexto y Arquitectura
 
 > **Fuente Única de Verdad (Single Source of Truth - SSOT)**  
-> **Versión del Proyecto:** 1.5.0  
+> **Versión del Proyecto:** 1.6.0  
 > **Ubicación:** `c:\Users\Martin\.gemini\antigravity-ide\scratch\gastrofest-app`  
 > **Última Actualización:** 18 de Agosto de 2026
 
