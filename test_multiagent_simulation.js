@@ -357,10 +357,14 @@ async function runAgentCarlos() {
   const annData = await annRes.json();
   assert('Carlos', annData.success === true, 'Anuncio urgente emitido exitosamente a todos los visitantes');
 
-  // 5. Limpieza (Baja del Stand de prueba)
+  // 5. Limpieza (Baja del Stand de prueba y aviso)
   const delRes = await fetch(`http://localhost:8080/api/stands/${createdStandId}`, { method: 'DELETE' });
   const delData = await delRes.json();
   assert('Carlos', delData.success === true, `Baja limpia del stand de prueba #${createdStandId} ejecutada`);
+
+  if (annData.announcement && annData.announcement.id) {
+    await fetch(`http://localhost:8080/api/announcements/${annData.announcement.id}`, { method: 'DELETE' });
+  }
 
   agentReports.push({ agent: 'Carlos', duration: Date.now() - startTime, status: 'SUCCESS' });
 }
@@ -418,6 +422,13 @@ async function runAgentStressBot() {
   const raffleResults = await Promise.all(raffleRequests);
   const allTicketsOk = raffleResults.every(r => r.success && r.ticket && r.ticket.code);
   assert('StressBot', allTicketsOk, `10 registros concurrentes al sorteo procesados con tickets únicos`);
+
+  // Limpieza de tickets de prueba para mantener la base impecable
+  for (const res of raffleResults) {
+    if (res.ticket && res.ticket.code) {
+      await fetch(`http://localhost:8080/api/raffle/participants/${res.ticket.code}`, { method: 'DELETE' });
+    }
+  }
 
   agentReports.push({ agent: 'StressBot', duration: totalDuration, status: 'SUCCESS' });
 }

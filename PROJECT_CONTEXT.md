@@ -1,7 +1,7 @@
 # 🌿 EcoGastroFest 2026 - Documento Maestro de Contexto y Arquitectura
 
 > **Fuente Única de Verdad (Single Source of Truth - SSOT)**  
-> **Versión del Proyecto:** 1.2.0  
+> **Versión del Proyecto:** 1.3.0  
 > **Ubicación:** `c:\Users\Martin\.gemini\antigravity-ide\scratch\gastrofest-app`  
 > **Última Actualización:** 18 de Agosto de 2026
 
@@ -40,25 +40,20 @@ graph TD
         B7[Categorías, Stages & Sponsors]
     end
 
-    subgraph DB_Adapter [🔌 Capa Adaptadora Universal - js/db-adapter.js]
-        C1{¿Firebase Habilitado?}
-        C2[🔥 Firebase Cloud Firestore]
-        C3[📦 IndexedDB Offline Persistence]
-        C4[💻 REST API Local / LocalStorage Fallback]
+    subgraph DB_Adapter [🔌 Capa Adaptadora - js/db-adapter.js & js/sync.js]
+        C1[💻 REST API Express - server.js]
+        C2[📦 LocalStorage Cache & Offline Resilience]
+        C3[⚡ Sincronización Automática en Vivo]
     end
 
-    subgraph Backend_Local [⚙️ Servidor Local - server.js / server.ps1]
+    subgraph Backend_Local [⚙️ Backend & Persistencia]
         D1[Express REST API Endpoints]
-        D2[Persistencia data/db.json]
+        D2[Base de Datos data/db.json & js/data.js]
     end
 
     Frontend_Cliente --> DB_Adapter
     Frontend_Admin --> DB_Adapter
-    C1 -- Sí (Producción) --> C2
-    C2 --> C3
-    C1 -- No (Local/Dev) --> C4
-    C4 --> Backend_Local
-    Backend_Local --> D2
+    DB_Adapter --> Backend_Local
 ```
 
 ---
@@ -69,8 +64,6 @@ graph TD
 | :--- | :--- | :--- |
 | `index.html` | Frontend | PWA principal de visitantes con tabs (Live, Agenda, Stands, Sorteo, Info/Mapa). |
 | `admin.html` | Frontend | Panel de control de operadores con autenticación por PIN y pestañas CRUD. |
-| `firebase_setup.html` | Herramienta | Asistente de diagnóstico y migración de datos hacia Firebase Firestore. |
-| `firebase.json` / `.firebaserc` | Config | Reglas y configuración de despliegue para Firebase Hosting. |
 | `manifest.json` | PWA | Metadatos de la aplicación para instalación nativa (Android, iOS, Windows). |
 | `sw.js` | Service Worker | Estrategia de caché *Stale-While-Revalidate* para uso 100% offline. |
 | `package.json` | Config | Dependencias: `express`, `sharp`, `jsdom`, `cors`. |
@@ -81,21 +74,23 @@ graph TD
 | `data/db.json` | Base de Datos | Estructura de datos completa (Event, Stands, Shows, Stages, Zones, Sponsors, etc.). |
 | `js/app.js` | Lógica App | Coordinador general, enrutador de pestañas, mapa satelital y audios. |
 | `js/admin.js` | Lógica Admin | Lógica del panel de control, CRUDs, sincronización y ruleta de sorteos. |
-| `js/db-adapter.js` | Adaptador DB | Conmutador transparente entre Cloud Firestore, IndexedDB y REST Local. |
-| `js/sync.js` | Sincronización | Monitor de estado de conexión (`online`/`offline`) y sondeo reactivo. |
+| `js/db-adapter.js` | Adaptador DB | Adaptador para comunicación REST API con Express y fallback offline en LocalStorage. |
+| `js/sync.js` | Sincronización | Monitor de estado de conexión (`online`/`offline`) y sincronización reactiva. |
 | `js/live-radar.js` | Módulo | Motor de cálculo de show en vivo, barras de progreso y simulador de horas. |
 | `js/agenda.js` | Módulo | Renderizado de shows, fotos WebP de artistas, filtro por días y favoritos. |
 | `js/stands.js` | Módulo | Renderizado de puestos, menú con precios, etiquetas Sin TACC/Vegano y modal. |
 | `js/raffle.js` | Módulo | Registro a sorteos, generador de Golden Ticket y renderizado QR en Canvas. |
 | `js/pwa.js` | Módulo | Manejo de evento `beforeinstallprompt` y registro de Service Worker. |
-| `js/data.js` | Datos | Inicialización del objeto global `GASTRO_DATA` en memoria. |
+| `js/data.js` | Datos | Inicialización del objeto global `GASTRO_DATA` en memoria (`window.GASTRO_DATA`). |
 | `scripts/fetch_and_convert_artists.js` | Script | Pipeline automatizado con `sharp` para procesar fotos de artistas uruguayos a WebP (<100KB). |
 | `images/artists/*.webp` | Medios | 10 fotografías optimizadas en WebP de los artistas del festival. |
 | `test_multiagent_simulation.js` | Pruebas | Framework multi-agente con 5 perfiles concurrentes (41 aserciones). |
 | `test_all_app_buttons.js` | Pruebas | Suite automatizada de **66 pruebas** JSDOM que valida 100% de la UI y botones. |
 | `test_dynamic_system.ps1` | Pruebas | Suite automatizada de 9 pruebas de integración backend y sincronización. |
 | `test_crud.ps1` / `test_eco_sponsors.ps1` | Pruebas | Pruebas unitarias de endpoints REST en PowerShell. |
+| `github_deploy.js` | Despliegue | Script de despliegue directo a GitHub y sincronización con GitHub Pages. |
 | `CHANGELOG.md` | Documentación | Historial cronológico estandarizado de versiones (*Keep a Changelog*). |
+| `AGENTS.md` | Contexto Multi-Máquina | Protocolo de arranque universal para instancias de Antigravity. |
 | `README.md` | Documentación | Guía de instalación, inicio rápido y arquitectura general. |
 
 ---
@@ -114,6 +109,9 @@ graph TD
 | `POST`| `/api/schedule` | Objeto `show` | Programa un nuevo show en la agenda. |
 | `PUT` | `/api/schedule/:id` | Objeto modificado | Edita horario, orador, escenario o descripción de un show. |
 | `DELETE`| `/api/schedule/:id` | URL param `id` | Da de baja un show de la agenda. |
+| `POST`| `/api/zones` | Objeto `zone` | Agrega una nueva zona al mapa satelital. |
+| `PUT` | `/api/zones/:id` | Objeto `zone` | Actualiza coordenadas y metadatos de una zona. |
+| `DELETE`| `/api/zones/:id` | URL param `id` | Elimina una zona del mapa satelital. |
 | `POST`| `/api/categories` | `{ type: "stand"\|"show", id, name, icon }` | Crea una categoría dinámica. |
 | `DELETE`| `/api/categories/:type/:id` | URL params | Elimina una categoría dinámica. |
 | `POST`| `/api/stages` | `{ id, name, icon }` | Agrega un nuevo escenario. |
@@ -121,21 +119,19 @@ graph TD
 | `POST`| `/api/sponsors` | `{ tier: "gold"\|"silver", name, tierName, icon }` | Da de alta un patrocinador sustentable. |
 | `DELETE`| `/api/sponsors/:tier/:name` | URL params | Elimina un patrocinador. |
 | `POST`| `/api/announcements` | `{ type, icon, title, message, active }` | Publica un aviso en vivo para los visitantes. |
+| `DELETE`| `/api/announcements/:id` | URL param `id` | Elimina un aviso en vivo. |
 | `POST`| `/api/raffle/register`| `{ name, phone, stand }` | Registra a un visitante y genera un ticket serial. |
+| `DELETE`| `/api/raffle/participants/:code`| URL param `code` | Elimina un ticket del sorteo. |
 | `POST`| `/api/auth/login` | `{ pin: "1234" }` | Autentica a un operador en el panel de control. |
 
 ---
 
 ## ⚡ 5. Resiliencia y Estrategia de Datos (Offline-First)
 
-1. **Prioridad Cloud (Firebase Firestore)**:
-   - Almacena el documento único `festivals/ecogastrofest_2026`.
-   - Utiliza listeners `onSnapshot` para reflejar en vivo las ventas agotadas, cambios de horario de shows o anuncios urgentes.
-   - Cuenta con persistencia local en `IndexedDB` activa mediante `enablePersistence()`.
-2. **Prioridad Local / Contingencia (Express REST + LocalStorage)**:
-   - Si no hay credenciales o falla la conexión externa, la app opera mediante el backend Express y `data/db.json`.
-   - El cliente PWA guarda una copia de respaldo en `localStorage.getItem('gastrofest_db')` para garantizar navegación incluso si el servidor se reinicia.
-3. **Caché Estático Service Worker (`sw.js`)**:
+1. **Sincronización Transparente Express REST + LocalStorage**:
+   - La arquitectura opera de forma autónoma y veloz con el backend Express y `data/db.json`.
+   - El cliente PWA y el panel de administración sincronizan de forma optimista con `localStorage.getItem('gastrofest_db')` para garantizar funcionamiento continuo ante cortes de red en el festival.
+2. **Caché Estático Service Worker (`sw.js`)**:
    - Almacena en caché todos los activos esenciales (HTML, CSS, JS, imágenes WebP de artistas y fuentes de Google).
 
 ---

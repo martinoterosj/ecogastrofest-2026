@@ -265,6 +265,7 @@ async function testAdminApp() {
 
   // 4. Test Schedule Management
   console.log('\n4. Probando Acciones de Shows (En Vivo, Retraso, Finalizar):');
+  AdminApp.ensureState();
   const firstShow = AdminApp.dbState.schedule[0];
   await AdminApp.updateEventStatus(firstShow.id, 'live');
   assert(firstShow.status === 'live', `Botón '🔴 En Vivo' actualiza estado del show a 'live'`);

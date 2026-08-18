@@ -136,6 +136,30 @@ const AdminApp = {
     if (dishForm) dishForm.addEventListener('submit', (e) => this.saveDish(e));
   },
 
+  ensureState() {
+    if (!this.dbState || !this.dbState.schedule || !this.dbState.stands) {
+      const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('gastrofest_db') : null;
+      if (saved) {
+        try { this.dbState = Object.assign(this.dbState || {}, JSON.parse(saved)); } catch (e) {}
+      }
+    }
+    const defaultData = window.GASTRO_DATA ? GASTRO_DATA : {};
+    if (!this.dbState) {
+      this.dbState = JSON.parse(JSON.stringify(defaultData));
+    }
+    if (!this.dbState.event) this.dbState.event = defaultData.event ? { ...defaultData.event } : {};
+    if (!this.dbState.schedule || this.dbState.schedule.length === 0) this.dbState.schedule = defaultData.schedule ? JSON.parse(JSON.stringify(defaultData.schedule)) : [];
+    if (!this.dbState.stands || this.dbState.stands.length === 0) this.dbState.stands = defaultData.stands ? JSON.parse(JSON.stringify(defaultData.stands)) : [];
+    if (!this.dbState.zones || this.dbState.zones.length === 0) this.dbState.zones = defaultData.zones ? JSON.parse(JSON.stringify(defaultData.zones)) : [];
+    if (!this.dbState.stages) this.dbState.stages = defaultData.stages ? [...defaultData.stages] : [];
+    if (!this.dbState.standCategories) this.dbState.standCategories = defaultData.standCategories ? [...defaultData.standCategories] : [];
+    if (!this.dbState.showCategories) this.dbState.showCategories = defaultData.showCategories ? [...defaultData.showCategories] : [];
+    if (!this.dbState.sponsors) this.dbState.sponsors = defaultData.sponsors ? { ...defaultData.sponsors } : { gold: [], silver: [] };
+    if (!this.dbState.announcements) this.dbState.announcements = defaultData.announcements ? [...defaultData.announcements] : [];
+    if (!this.dbState.participants) this.dbState.participants = defaultData.participants ? [...defaultData.participants] : [];
+    return this.dbState;
+  },
+
   async fetchState() {
     try {
       const res = await fetch('./api/sync');
@@ -146,34 +170,25 @@ const AdminApp = {
         throw new Error('Static host fallback');
       }
     } catch (e) {
-      console.log('ℹ️ Usando almacenamiento local/cloud para el panel de administración');
-      const saved = localStorage.getItem('gastrofest_db');
-      if (saved) {
-        this.dbState = JSON.parse(saved);
-      } else if (window.GASTRO_DATA) {
-        this.dbState = JSON.parse(JSON.stringify(GASTRO_DATA));
-      }
+      this.ensureState();
     }
 
-    if (this.dbState) {
-      this.renderSchedule();
-      this.renderStands();
-      this.renderMapEditor();
-      this.renderAnnouncements();
-      this.renderRaffle();
-      this.renderConfig();
-    }
+    this.ensureState();
+    this.renderSchedule();
+    this.renderStands();
+    this.renderMapEditor();
+    this.renderAnnouncements();
+    this.renderRaffle();
+    this.renderConfig();
   },
 
   persistOffline() {
-    if (this.dbState) {
+    this.ensureState();
+    if (typeof localStorage !== 'undefined') {
       localStorage.setItem('gastrofest_db', JSON.stringify(this.dbState));
-      if (window.GASTRO_DATA) {
-        Object.assign(GASTRO_DATA, this.dbState);
-      }
-      if (window.DBAdapter && DBAdapter.isCloudReady) {
-        DBAdapter.saveCloudData(this.dbState);
-      }
+    }
+    if (window.GASTRO_DATA) {
+      Object.assign(GASTRO_DATA, this.dbState);
     }
   },
 
@@ -587,12 +602,15 @@ const AdminApp = {
 
   openNewStandModal() {
     this.editingStandId = null;
+    if (!this.dbState) this.dbState = { stands: [], schedule: [], zones: [] };
+    if (!this.dbState.stands) this.dbState.stands = (window.GASTRO_DATA && GASTRO_DATA.stands) ? [...GASTRO_DATA.stands] : [];
     this.populateStandCategoriesSelect();
     this.populateStandZonesSelect();
 
     document.getElementById('modalStandTitle').textContent = '➕ Alta de Nuevo Stand Gastronómico';
     document.getElementById('standNameInput').value = '';
-    document.getElementById('standNumberInput').value = `Stand #${String(this.dbState.stands.length + 1).padStart(2, '0')}`;
+    const standCount = (this.dbState.stands ? this.dbState.stands.length : 0) + 1;
+    document.getElementById('standNumberInput').value = `Stand #${String(standCount).padStart(2, '0')}`;
     document.getElementById('standCategoryNameInput').value = 'Carnes & Brasas';
     document.getElementById('standDishInput').value = '';
     document.getElementById('standEmojiInput').value = '🥩';
@@ -1266,40 +1284,31 @@ const AdminApp = {
       return;
     }
 
+    this.ensureState();
+
     try {
-      if (window.DBAdapter && DBAdapter.isCloudReady) {
+      const url = id ? `./api/zones/${id}` : './api/zones';
+      const method = id ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
         if (id) {
-          await DBAdapter.updateZone(id, payload);
           const idx = this.dbState.zones.findIndex(z => z.id === id);
-          if (idx > -1) Object.assign(this.dbState.zones[idx], payload);
+          if (idx > -1) this.dbState.zones[idx] = data.zone || Object.assign(this.dbState.zones[idx], payload);
         } else {
-          const res = await DBAdapter.addZone(payload);
-          this.dbState.zones.push(res.zone || { id: `zone-${Date.now()}`, ...payload });
+          this.dbState.zones.push(data.zone || { id: `zone-${Date.now()}`, ...payload });
         }
       } else {
-        const url = id ? `./api/zones/${id}` : './api/zones';
-        const method = id ? 'PUT' : 'POST';
-
-        const res = await fetch(url, {
-          method,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (id) {
-            const idx = this.dbState.zones.findIndex(z => z.id === id);
-            if (idx > -1) this.dbState.zones[idx] = data.zone || Object.assign(this.dbState.zones[idx], payload);
-          } else {
-            this.dbState.zones.push(data.zone || { id: `zone-${Date.now()}`, ...payload });
-          }
-        } else {
-          throw new Error('Fallback offline save');
-        }
+        throw new Error('Fallback offline save');
       }
     } catch (err) {
-      if (!this.dbState.zones) this.dbState.zones = [];
+      this.ensureState();
       if (id) {
         const idx = this.dbState.zones.findIndex(z => z.id === id);
         if (idx > -1) Object.assign(this.dbState.zones[idx], payload);
@@ -1326,11 +1335,7 @@ const AdminApp = {
     if (!confirm('¿Seguro que deseas eliminar esta zona del mapa?')) return;
 
     try {
-      if (window.DBAdapter && DBAdapter.isCloudReady) {
-        await DBAdapter.deleteZone(id);
-      } else {
-        await fetch(`./api/zones/${id}`, { method: 'DELETE' });
-      }
+      await fetch(`./api/zones/${id}`, { method: 'DELETE' });
     } catch (e) {}
 
     if (this.dbState && this.dbState.zones) {

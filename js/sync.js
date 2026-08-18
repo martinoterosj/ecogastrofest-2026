@@ -8,19 +8,9 @@ const LiveSync = {
   lastAnnouncementId: null,
 
   async init() {
-    // 1. Initialize Database Adapter (Cloud Firestore or Local)
     if (window.DBAdapter) {
-      const isCloud = await DBAdapter.init();
-      if (isCloud) {
-        console.log('☁️ LiveSync conectado a Firebase Firestore Realtime');
-        DBAdapter.subscribe((data) => {
-          this.applyUpdates(data);
-        });
-        return;
-      }
+      await DBAdapter.init();
     }
-
-    // 2. Fallback: Local Server Polling
     this.syncWithBackend();
     this.startAutoSync();
   },

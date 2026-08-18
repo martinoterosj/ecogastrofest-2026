@@ -12,6 +12,30 @@ Todas las modificaciones, mejoras arquitectónicas, módulos y correcciones del 
 
 ---
 
+## [1.3.0] - 2026-08-18
+
+### Removed (Eliminación de Código y Dependencias Inutilizadas)
+- **Eliminación Total de Firebase y Reducción Masiva de Peso (-237 MB)**:
+  - Eliminado el binario pesado `firebase.exe` (237 MB) y archivos de configuración huérfanos (`firebase.json`, `.firebaserc`, `firebase_setup.html`, `iniciar_sesion_firebase.bat`, `deploy_hosting.ps1`, `test_firestore.ps1`, `js/firebase-config.js`).
+  - Limpieza de scripts CDN de Firebase en `index.html` y `admin.html`, acelerando la carga inicial y eliminando peticiones externas innecesarias.
+
+### Changed (Optimizaciones y Refactorización)
+- **Arquitectura Liviana y Pura REST + LocalStorage (`js/db-adapter.js` & `js/sync.js`)**:
+  - `DBAdapter` simplificado a un adaptador nativo de sincronización transparente con el backend Express (`server.js`) y persistencia local offline en `localStorage`.
+  - Incorporado `ensureState()` infalible en `js/admin.js` que garantiza la integridad completa de todas las entidades (shows, stands, zonas, avisos, sorteos) evitando pérdidas parciales de estado.
+  - Exposición explícita de `window.GASTRO_DATA` en `js/data.js` para compatibilidad universal con entornos de prueba y navegadores.
+
+### Fixed (Limpieza de Datos Residuales & Auto-Limpieza en Tests)
+- **Purga de Datos de Prueba en `data/db.json` y `js/data.js`**:
+  - Eliminada zona de prueba `zone-154` (`OTERO`).
+  - Eliminado stand de prueba `st-69` (`Asado Criollo VIP Test`).
+  - Eliminados avisos flash de prueba duplicados, conservando únicamente el comunicado oficial del festival libre de plásticos.
+  - Purgados los más de 700 participantes generados por las pruebas de estrés de `StressBot`, restaurando los 3 registros semilla iniciales.
+- **Auto-Limpieza en Suites de Pruebas (`test_multiagent_simulation.js`)**:
+  - Los agentes `Carlos` y `StressBot` ahora eliminan automáticamente los registros creados durante la prueba tras verificar su aserción, garantizando que la base de datos se mantenga permanentemente limpia.
+
+---
+
 ## [1.2.0] - 2026-08-18
 
 ### Added (Nuevas Funcionalidades)
