@@ -12,6 +12,26 @@ Todas las modificaciones, mejoras arquitectónicas, módulos y correcciones del 
 
 ---
 
+## [1.7.0] - 2026-08-18
+
+### Added (Nuevas Funcionalidades)
+- **Controlador de Zoom Interactivo con Pellizco en el Mapa Satelital (`MapZoomController` en `js/app.js` & `css/components.css`)**:
+  - **Pinch-to-Zoom Táctil Multitouch**: Soporte nativo para pellizcar con 2 dedos en móviles para acercar y alejar suavemente sobre Plaza Independencia.
+  - **Arrastre y Paneo Suave**: Al hacer zoom, permite desplazarse libremente por el predio con 1 dedo manteniendo límites de contención seguros.
+  - **Doble Toque Inteligente**: Doble tap para alternar instantáneamente entre zoom ampliado (2.2x) y vista general centrada (1.0x).
+  - **Botonera Flotante & Indicador de Escala**: Controles de acceso rápido (`➕ Acercar`, `➖ Alejar`, `🎯 Centrar`) e indicador visual de escala (`1.0x`, `1.5x`, `2.0x`).
+  - **Zoom con Rueda del Mouse**: Paneo y zoom fluido con scroll wheel para computadoras de escritorio.
+
+### Fixed (Corrección de Desbordes Horizontales y Saltos de Línea)
+- **Eliminación Total de Desplazamientos Horizontales Involuntarios**:
+  - Corregido `.filter-scroll-wrapper` eliminando márgenes negativos que desbordaban el ancho de pantalla en las pestañas de Stands y Agenda.
+  - Añadido `white-space: nowrap !important` en `.filter-chip`, `.desktop-nav-btn`, `.status-pill`, `#networkStatusText` y los textos del menú de navegación inferior, impidiendo saltos de línea antiestéticos como `"En \n Vivo"` o `"Info & \n Eco"`.
+
+### Changed (Mejoras en Suites de Pruebas)
+- **Expansión de la Suite de Pruebas (`test_all_app_buttons.js`)**: Batería ampliada a **88 pruebas** (+6 aserciones de inicialización de `MapZoomController`, zoom in/out, botón reset y presencia de toolbar). Total general del proyecto: **133 pruebas automatizadas al 100%**.
+
+---
+
 ## [1.6.0] - 2026-08-18
 
 ### Changed (Optimizaciones Responsivas y Calibración Móvil)

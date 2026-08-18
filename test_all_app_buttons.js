@@ -65,6 +65,7 @@ async function testVisitorApp() {
   const Stands = window.eval('Stands');
   const Raffle = window.eval('Raffle');
   const Auth = window.eval('Auth');
+  const MapZoomController = window.MapZoomController;
 
   App.init();
 
@@ -169,6 +170,18 @@ async function testVisitorApp() {
   assert(detailBox.style.display === 'block', `Click en pin de zona abre ficha informativa con stands y shows`);
   App.closeVisitorZoneDetail();
   assert(detailBox.style.display === 'none', `Cerrar ficha informativa de zona funciona correctamente`);
+
+  // Test Map Zoom & Pinch Controller
+  assert(typeof MapZoomController !== 'undefined', `Módulo MapZoomController cargado`);
+  MapZoomController.init();
+  assert(document.getElementById('btnMapZoomIn') !== null, `Botón de zoom in [+] presente en el mapa`);
+  assert(document.getElementById('btnMapZoomOut') !== null, `Botón de zoom out [-] presente en el mapa`);
+  assert(document.getElementById('btnMapZoomReset') !== null, `Botón de reset de zoom [Centrar] presente en el mapa`);
+
+  MapZoomController.zoomIn();
+  assert(MapZoomController.scale > 1, `Acercar zoom incrementa la escala del mapa (${MapZoomController.scale}x)`);
+  MapZoomController.resetZoom();
+  assert(MapZoomController.scale === 1, `Resetear zoom devuelve el mapa a escala 1.0x`);
 
   // 7. Test Auth Module: Welcome Modal, Google Login, Guest Access & Profile Drawer
   console.log('\n7. Probando Modal de Bienvenida, Login con Google y Modo Invitado:');

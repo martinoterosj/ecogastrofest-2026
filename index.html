@@ -349,12 +349,26 @@
           </div>
 
           <!-- Interactive Satellite Map Container -->
-          <div class="visitor-satellite-map-wrapper">
+          <div class="visitor-satellite-map-wrapper" id="visitorSatelliteMapWrapper">
+            <!-- Map Zoom & Control Overlay -->
+            <div class="map-zoom-toolbar">
+              <button class="btn-map-control" id="btnMapZoomIn" title="Acercar mapa (Zoom In)" aria-label="Acercar mapa">➕</button>
+              <button class="btn-map-control" id="btnMapZoomOut" title="Alejar mapa (Zoom Out)" aria-label="Alejar mapa">➖</button>
+              <button class="btn-map-control btn-map-reset" id="btnMapZoomReset" title="Centrar mapa" aria-label="Centrar mapa">🎯 Centrar</button>
+              <span class="map-zoom-level-badge" id="mapZoomBadge">1.0x</span>
+            </div>
+
             <div class="visitor-satellite-map" id="visitorSatelliteMap">
-              <img src="images/map-plaza-independencia.webp" alt="Mapa Satelital Plaza Independencia San José" class="visitor-satellite-img" loading="eager">
-              <div id="visitorMapPinsLayer" class="visitor-map-pins-layer">
-                <!-- Injected dynamically by App.renderVisitorMap() -->
+              <div class="visitor-map-viewport" id="visitorMapViewport">
+                <img src="images/map-plaza-independencia.webp" alt="Mapa Satelital Plaza Independencia San José" class="visitor-satellite-img" loading="eager" draggable="false">
+                <div id="visitorMapPinsLayer" class="visitor-map-pins-layer">
+                  <!-- Injected dynamically by App.renderVisitorMap() -->
+                </div>
               </div>
+            </div>
+
+            <div class="map-gesture-hint">
+              <span>🤏 Pellizca o usa +/- para hacer zoom • Arrastra para explorar la plaza</span>
             </div>
           </div>
 

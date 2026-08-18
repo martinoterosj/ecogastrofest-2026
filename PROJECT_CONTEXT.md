@@ -1,7 +1,7 @@
 # 🌿 EcoGastroFest 2026 - Documento Maestro de Contexto y Arquitectura
 
 > **Fuente Única de Verdad (Single Source of Truth - SSOT)**  
-> **Versión del Proyecto:** 1.6.0  
+> **Versión del Proyecto:** 1.7.0  
 > **Ubicación:** `c:\Users\Martin\.gemini\antigravity-ide\scratch\gastrofest-app`  
 > **Última Actualización:** 18 de Agosto de 2026
 
@@ -87,7 +87,7 @@ graph TD
 | `scripts/fetch_and_convert_artists.js` | Script | Pipeline automatizado con `sharp` para procesar fotos de artistas uruguayos a WebP (<100KB). |
 | `images/artists/*.webp` | Medios | 10 fotografías optimizadas en WebP de los artistas del festival. |
 | `test_multiagent_simulation.js` | Pruebas | Framework multi-agente con 5 perfiles concurrentes (**45 aserciones**). |
-| `test_all_app_buttons.js` | Pruebas | Suite automatizada de **82 pruebas** JSDOM que valida 100% de la UI, Leads, Auth y botones. |
+| `test_all_app_buttons.js` | Pruebas | Suite automatizada de **88 pruebas** JSDOM que valida 100% de la UI, Leads, Map Zoom, Auth y botones. |
 | `test_dynamic_system.ps1` | Pruebas | Suite automatizada de 9 pruebas de integración backend y sincronización. |
 | `test_crud.ps1` / `test_eco_sponsors.ps1` | Pruebas | Pruebas unitarias de endpoints REST en PowerShell. |
 | `github_deploy.js` | Despliegue | Script de despliegue directo a GitHub y sincronización con GitHub Pages. |

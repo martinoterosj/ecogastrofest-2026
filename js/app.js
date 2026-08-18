@@ -37,6 +37,7 @@ const App = {
     Stands.init();
     Raffle.init();
     PWAController.init();
+    MapZoomController.init();
 
     // Toggle simulator drawer button
     const simToggle = document.getElementById('btnToggleSimulator');
@@ -418,6 +419,199 @@ const App = {
     requestAnimationFrame(renderConfetti);
   }
 };
+
+/**
+ * MAP ZOOM & PAN CONTROLLER (PINCH-TO-ZOOM, DOUBLE-TAP, DRAG & BUTTONS)
+ */
+const MapZoomController = {
+  container: null,
+  viewport: null,
+  badge: null,
+  
+  scale: 1,
+  minScale: 1,
+  maxScale: 4,
+  
+  panX: 0,
+  panY: 0,
+  
+  isDragging: false,
+  dragStartX: 0,
+  dragStartY: 0,
+  
+  initialDistance: 0,
+  initialScale: 1,
+  
+  lastTapTime: 0,
+
+  init() {
+    this.container = document.getElementById('visitorSatelliteMap');
+    this.viewport = document.getElementById('visitorMapViewport');
+    this.badge = document.getElementById('mapZoomBadge');
+    
+    if (!this.container || !this.viewport) return;
+    
+    this.setupTouchListeners();
+    this.setupMouseListeners();
+    this.setupButtonListeners();
+  },
+
+  updateTransform(smooth = false) {
+    if (!this.viewport || !this.container) return;
+    
+    const rect = this.container.getBoundingClientRect();
+    const maxPanX = (rect.width * (this.scale - 1)) / 2;
+    const maxPanY = (rect.height * (this.scale - 1)) / 2;
+    
+    this.panX = Math.max(-maxPanX, Math.min(maxPanX, this.panX));
+    this.panY = Math.max(-maxPanY, Math.min(maxPanY, this.panY));
+    
+    this.viewport.style.transition = smooth ? 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)' : 'none';
+    this.viewport.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.scale})`;
+    
+    if (this.badge) {
+      this.badge.textContent = `${this.scale.toFixed(1)}x`;
+    }
+  },
+
+  zoomIn() {
+    this.scale = Math.min(this.maxScale, +(this.scale + 0.5).toFixed(1));
+    this.updateTransform(true);
+  },
+
+  zoomOut() {
+    this.scale = Math.max(this.minScale, +(this.scale - 0.5).toFixed(1));
+    if (this.scale === 1) {
+      this.panX = 0;
+      this.panY = 0;
+    }
+    this.updateTransform(true);
+  },
+
+  resetZoom() {
+    this.scale = 1;
+    this.panX = 0;
+    this.panY = 0;
+    this.updateTransform(true);
+  },
+
+  setupButtonListeners() {
+    const btnIn = document.getElementById('btnMapZoomIn');
+    const btnOut = document.getElementById('btnMapZoomOut');
+    const btnReset = document.getElementById('btnMapZoomReset');
+    
+    if (btnIn) btnIn.addEventListener('click', (e) => { e.preventDefault(); this.zoomIn(); });
+    if (btnOut) btnOut.addEventListener('click', (e) => { e.preventDefault(); this.zoomOut(); });
+    if (btnReset) btnReset.addEventListener('click', (e) => { e.preventDefault(); this.resetZoom(); });
+  },
+
+  setupTouchListeners() {
+    if (!this.container) return;
+
+    this.container.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        // Pinch start
+        this.initialDistance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        this.initialScale = this.scale;
+      } else if (e.touches.length === 1) {
+        const now = Date.now();
+        if (now - this.lastTapTime < 300) {
+          // Double-tap zoom toggle
+          if (this.scale > 1.2) {
+            this.resetZoom();
+          } else {
+            this.scale = 2.2;
+            this.updateTransform(true);
+          }
+          this.lastTapTime = 0;
+          return;
+        }
+        this.lastTapTime = now;
+        
+        if (this.scale > 1.05) {
+          this.isDragging = true;
+          this.dragStartX = e.touches[0].clientX - this.panX;
+          this.dragStartY = e.touches[0].clientY - this.panY;
+        }
+      }
+    }, { passive: false });
+
+    this.container.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2) {
+        if (e.cancelable) e.preventDefault();
+        const currentDistance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        if (this.initialDistance > 0) {
+          const newScale = this.initialScale * (currentDistance / this.initialDistance);
+          this.scale = Math.min(this.maxScale, Math.max(this.minScale, newScale));
+          this.updateTransform(false);
+        }
+      } else if (e.touches.length === 1 && this.isDragging && this.scale > 1.05) {
+        if (e.cancelable) e.preventDefault();
+        this.panX = e.touches[0].clientX - this.dragStartX;
+        this.panY = e.touches[0].clientY - this.dragStartY;
+        this.updateTransform(false);
+      }
+    }, { passive: false });
+
+    this.container.addEventListener('touchend', (e) => {
+      this.isDragging = false;
+      this.initialDistance = 0;
+      if (this.scale <= 1) {
+        this.resetZoom();
+      } else {
+        this.updateTransform(true);
+      }
+    });
+  },
+
+  setupMouseListeners() {
+    if (!this.container) return;
+
+    this.container.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.25 : -0.25;
+      this.scale = Math.min(this.maxScale, Math.max(this.minScale, +(this.scale + delta).toFixed(2)));
+      if (this.scale === 1) {
+        this.panX = 0;
+        this.panY = 0;
+      }
+      this.updateTransform(true);
+    }, { passive: false });
+
+    this.container.addEventListener('mousedown', (e) => {
+      if (this.scale > 1.05) {
+        this.isDragging = true;
+        this.dragStartX = e.clientX - this.panX;
+        this.dragStartY = e.clientY - this.panY;
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (this.isDragging && this.scale > 1.05) {
+        this.panX = e.clientX - this.dragStartX;
+        this.panY = e.clientY - this.dragStartY;
+        this.updateTransform(false);
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (this.isDragging) {
+        this.isDragging = false;
+        this.updateTransform(true);
+      }
+    });
+  }
+};
+
+if (typeof window !== 'undefined') {
+  window.MapZoomController = MapZoomController;
+}
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {

@@ -236,6 +236,8 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap !important;
+  flex-shrink: 0;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -255,6 +257,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 /* Status Indicator Pill */
@@ -270,6 +273,13 @@ body {
   color: #34d399;
   border: 1px solid rgba(16, 185, 129, 0.3);
   transition: all 0.3s ease;
+  white-space: nowrap !important;
+  flex-shrink: 0;
+}
+
+#networkStatusText {
+  white-space: nowrap !important;
+  display: inline;
 }
 
 .status-pill.offline {
@@ -283,6 +293,7 @@ body {
   height: 7px;
   border-radius: 50%;
   background: currentColor;
+  flex-shrink: 0;
 }
 
 .status-pill.online .status-dot {
