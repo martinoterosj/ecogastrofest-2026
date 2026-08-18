@@ -12,6 +12,23 @@ Todas las modificaciones, mejoras arquitectónicas, módulos y correcciones del 
 
 ---
 
+## [1.4.0] - 2026-08-18
+
+### Added (Nuevas Funcionalidades)
+- **Módulo de Autenticación y Bienvenida (`js/auth.js`)**:
+  - Pantalla flotante de bienvenida (*Dark Botanical Glassmorphism*) desplegada automáticamente al ingresar por primera vez o tras cerrar sesión.
+  - **Inicio de Sesión con Google**: Botón estilizado con el logotipo SVG oficial de Google que crea la sesión del usuario con avatar, nombre verificado y correo electrónico.
+  - **Acceso Inmediato como Invitado**: Permite a cualquier visitante comenzar a explorar el festival en 1 solo tap sin barreras ni contraseñas.
+  - **Chip de Perfil en Barra Superior (`#userProfileChip`)**: Muestra en vivo la foto/avatar y nombre del usuario con distinción visual para cuentas de Google (`.is-google`).
+  - **Drawer / Bottom Sheet de Perfil (`#userProfileDrawer`)**: Panel deslizable para consultar el estado de la sesión, vincular cuenta Google desde modo invitado, ver el Golden Ticket activo o cerrar sesión.
+  - **Auto-Completado de Sorteo**: Al registrarse con Google, el formulario de sorteos pre-carga automáticamente el nombre del titular para una experiencia fluida.
+
+### Changed (Mejoras en Suites de Pruebas)
+- **Expansión de la Suite de Botones & UI (`test_all_app_buttons.js`)**: Batería ampliada a **77 pruebas** (+11 aserciones dedicadas al flujo de autenticación, modal de bienvenida, chip y drawer de perfil).
+- **Expansión de la Simulación Multi-Agente (`test_multiagent_simulation.js`)**: Batería ampliada a **45 pruebas** validando el comportamiento de visitantes con cuenta Google y modo invitado en 1.62 segundos.
+
+---
+
 ## [1.3.0] - 2026-08-18
 
 ### Removed (Eliminación de Código y Dependencias Inutilizadas)

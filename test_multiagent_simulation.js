@@ -100,6 +100,11 @@ async function runAgentValentina() {
   const App = window.eval('App');
   const Stands = window.eval('Stands');
   const GASTRO_DATA = window.eval('GASTRO_DATA');
+  const Auth = window.eval('Auth');
+
+  // 0. Autenticación con Google
+  Auth.loginWithGoogle({ name: 'Valentina Vega', email: 'valentina.v@gmail.com' });
+  assert('Valentina', Auth.currentUser && Auth.currentUser.type === 'google', 'Inicia sesión con Google al ingresar al festival');
 
   // 1. Navegar a Stands
   App.switchTab('stands');
@@ -175,6 +180,11 @@ async function runAgentRodrigo() {
   const LiveRadar = window.eval('LiveRadar');
   const Agenda = window.eval('Agenda');
   const GASTRO_DATA = window.eval('GASTRO_DATA');
+  const Auth = window.eval('Auth');
+
+  // 0. Acceso como Invitado
+  Auth.loginAsGuest('Rodrigo Melómano');
+  assert('Rodrigo', Auth.currentUser && Auth.currentUser.type === 'guest', 'Ingresa como Invitado para explorar la música del festival');
 
   // 1. Navegar a Agenda
   App.switchTab('agenda');
@@ -241,6 +251,12 @@ async function runAgentCamila() {
   const App = window.eval('App');
   const Raffle = window.eval('Raffle');
   const GASTRO_DATA = window.eval('GASTRO_DATA');
+  const Auth = window.eval('Auth');
+
+  // 0. Login con Google y verificación de pre-fill automático
+  Auth.loginWithGoogle({ name: 'Camila Navarro', email: 'camila.navarro@gmail.com' });
+  assert('Camila', Auth.currentUser && Auth.currentUser.name === 'Camila Navarro', 'Inicia sesión con Google para agilizar su participación');
+  assert('Camila', document.getElementById('raffleName').value === 'Camila Navarro', 'Formulario de sorteo pre-completa automáticamente el nombre del titular');
 
   App.switchTab('sorteo');
 

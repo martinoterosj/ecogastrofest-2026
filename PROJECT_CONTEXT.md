@@ -1,7 +1,7 @@
 # 🌿 EcoGastroFest 2026 - Documento Maestro de Contexto y Arquitectura
 
 > **Fuente Única de Verdad (Single Source of Truth - SSOT)**  
-> **Versión del Proyecto:** 1.3.0  
+> **Versión del Proyecto:** 1.4.0  
 > **Ubicación:** `c:\Users\Martin\.gemini\antigravity-ide\scratch\gastrofest-app`  
 > **Última Actualización:** 18 de Agosto de 2026
 
@@ -12,7 +12,7 @@
 **EcoGastroFest 2026** es una plataforma digital Progressive Web App (PWA) de alto rendimiento desarrollada para la *Feria Gastronómica Sustentable de San José de Mayo, Uruguay* (Plaza Independencia). 
 
 La plataforma cubre dos frentes de manera coordinada y en tiempo real:
-1. **📱 App Visitantes (PWA Mobile-First / Desktop)**: Experiencia para los asistentes con catálogo de puestos, filtros dietarios (Vegano, Celíaco), agenda con favoritos, radar de espectáculos en vivo, simulador de horarios, plano satelital interactivo, trivias sustentables y tickets dorados para sorteos con código QR interactivo.
+1. **📱 App Visitantes (PWA Mobile-First / Desktop)**: Experiencia para los asistentes con bienvenida y autenticación (Google / Invitado), catálogo de puestos, filtros dietarios (Vegano, Celíaco), agenda con favoritos, radar de espectáculos en vivo, simulador de horarios, plano satelital interactivo, trivias sustentables y tickets dorados para sorteos con código QR interactivo.
 2. **🛠️ Panel de Operadores (Admin Dashboard)**: Interfaz de gestión rápida con acceso por PIN para organizadores, que permite CRUD de stands, control de stock y plato agotado (`Sold Out`) en caliente, programación de shows, emisión de anuncios urgentes, ruleta en vivo de sorteos, edición de coordenadas del mapa y gestión dinámica de categorías/sponsors.
 
 ---
@@ -22,6 +22,7 @@ La plataforma cubre dos frentes de manera coordinada y en tiempo real:
 ```mermaid
 graph TD
     subgraph Frontend_Cliente [📱 App Visitantes - index.html]
+        A0[Auth & Bienvenida - js/auth.js]
         A1[Live Radar & Simulador]
         A2[Catálogo Stands & Filtros Dietarios]
         A3[Agenda de Shows & Favoritos]
@@ -62,7 +63,7 @@ graph TD
 
 | Archivo / Carpeta | Tipo | Responsabilidad / Descripción |
 | :--- | :--- | :--- |
-| `index.html` | Frontend | PWA principal de visitantes con tabs (Live, Agenda, Stands, Sorteo, Info/Mapa). |
+| `index.html` | Frontend | PWA principal de visitantes con tabs (Live, Agenda, Stands, Sorteo, Info/Mapa) y modales de Auth. |
 | `admin.html` | Frontend | Panel de control de operadores con autenticación por PIN y pestañas CRUD. |
 | `manifest.json` | PWA | Metadatos de la aplicación para instalación nativa (Android, iOS, Windows). |
 | `sw.js` | Service Worker | Estrategia de caché *Stale-While-Revalidate* para uso 100% offline. |
@@ -74,6 +75,7 @@ graph TD
 | `data/db.json` | Base de Datos | Estructura de datos completa (Event, Stands, Shows, Stages, Zones, Sponsors, etc.). |
 | `js/app.js` | Lógica App | Coordinador general, enrutador de pestañas, mapa satelital y audios. |
 | `js/admin.js` | Lógica Admin | Lógica del panel de control, CRUDs, sincronización y ruleta de sorteos. |
+| `js/auth.js` | Autenticación | Inicio de sesión con Google, modo Invitado, gestión de sesión y chip de perfil. |
 | `js/db-adapter.js` | Adaptador DB | Adaptador para comunicación REST API con Express y fallback offline en LocalStorage. |
 | `js/sync.js` | Sincronización | Monitor de estado de conexión (`online`/`offline`) y sincronización reactiva. |
 | `js/live-radar.js` | Módulo | Motor de cálculo de show en vivo, barras de progreso y simulador de horas. |
@@ -84,8 +86,8 @@ graph TD
 | `js/data.js` | Datos | Inicialización del objeto global `GASTRO_DATA` en memoria (`window.GASTRO_DATA`). |
 | `scripts/fetch_and_convert_artists.js` | Script | Pipeline automatizado con `sharp` para procesar fotos de artistas uruguayos a WebP (<100KB). |
 | `images/artists/*.webp` | Medios | 10 fotografías optimizadas en WebP de los artistas del festival. |
-| `test_multiagent_simulation.js` | Pruebas | Framework multi-agente con 5 perfiles concurrentes (41 aserciones). |
-| `test_all_app_buttons.js` | Pruebas | Suite automatizada de **66 pruebas** JSDOM que valida 100% de la UI y botones. |
+| `test_multiagent_simulation.js` | Pruebas | Framework multi-agente con 5 perfiles concurrentes (**45 aserciones**). |
+| `test_all_app_buttons.js` | Pruebas | Suite automatizada de **77 pruebas** JSDOM que valida 100% de la UI, Auth y botones. |
 | `test_dynamic_system.ps1` | Pruebas | Suite automatizada de 9 pruebas de integración backend y sincronización. |
 | `test_crud.ps1` / `test_eco_sponsors.ps1` | Pruebas | Pruebas unitarias de endpoints REST en PowerShell. |
 | `github_deploy.js` | Despliegue | Script de despliegue directo a GitHub y sincronización con GitHub Pages. |

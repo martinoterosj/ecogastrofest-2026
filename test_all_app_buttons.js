@@ -61,6 +61,9 @@ async function testVisitorApp() {
   const Agenda = window.eval('Agenda');
   const Stands = window.eval('Stands');
   const Raffle = window.eval('Raffle');
+  const Auth = window.eval('Auth');
+
+  App.init();
 
   // 1. Test Tab Navigation Buttons
   console.log('\n1. Probando Navegación por Pestañas (Mobile & Desktop):');
@@ -163,6 +166,40 @@ async function testVisitorApp() {
   assert(detailBox.style.display === 'block', `Click en pin de zona abre ficha informativa con stands y shows`);
   App.closeVisitorZoneDetail();
   assert(detailBox.style.display === 'none', `Cerrar ficha informativa de zona funciona correctamente`);
+
+  // 7. Test Auth Module: Welcome Modal, Google Login, Guest Access & Profile Drawer
+  console.log('\n7. Probando Modal de Bienvenida, Login con Google y Modo Invitado:');
+  assert(Auth !== undefined, 'Módulo Auth cargado correctamente');
+
+  // Test welcome modal active on fresh start
+  Auth.clearSession();
+  Auth.openWelcomeModal();
+  assert(document.getElementById('authWelcomeModal').classList.contains('active'), 'Modal de bienvenida #authWelcomeModal se muestra al ingresar');
+
+  // Test Guest login
+  const btnGuest = document.getElementById('btnAuthGuest');
+  btnGuest.click();
+  assert(Auth.currentUser !== null && Auth.currentUser.type === 'guest', 'Botón Invitado inicia sesión en modo Invitado');
+  assert(!document.getElementById('authWelcomeModal').classList.contains('active'), 'Modal de bienvenida se cierra tras elegir Invitado');
+  assert(document.getElementById('userProfileChip').style.display !== 'none', 'Chip de perfil en el header visible para invitado');
+
+  // Test Google login
+  const btnGoogle = document.getElementById('btnAuthGoogle');
+  btnGoogle.click();
+  assert(Auth.currentUser !== null && Auth.currentUser.type === 'google', 'Botón Google inicia sesión con cuenta Google verificada');
+  assert(document.getElementById('userProfileChip').classList.contains('is-google'), 'Chip de perfil refleja estilo de cuenta Google');
+
+  // Test opening Profile Drawer
+  const profileChip = document.getElementById('userProfileChip');
+  profileChip.click();
+  assert(document.getElementById('userProfileDrawer').classList.contains('active'), 'Click en Chip de Perfil abre el drawer #userProfileDrawer');
+  assert(document.getElementById('drawerUserName').textContent === Auth.currentUser.name, 'Drawer muestra el nombre del usuario conectado');
+
+  // Test Logout
+  const btnLogout = document.getElementById('btnLogoutAction');
+  btnLogout.click();
+  assert(Auth.currentUser === null, 'Botón Cerrar Sesión elimina la sesión activa');
+  assert(document.getElementById('authWelcomeModal').classList.contains('active'), 'Cerrar sesión reabre el modal de bienvenida');
 }
 
 async function testAdminApp() {

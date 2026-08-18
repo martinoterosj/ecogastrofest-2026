@@ -31,6 +31,7 @@ const App = {
     this.renderSponsors();
 
     // Init submodules
+    if (window.Auth) Auth.init();
     LiveRadar.init();
     Agenda.init();
     Stands.init();
