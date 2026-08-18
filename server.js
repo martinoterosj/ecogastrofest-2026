@@ -27,7 +27,12 @@ app.get('/api/sync', (req, res) => {
     announcements: db.announcements,
     schedule: db.schedule,
     stands: db.stands,
-    participantsCount: db.participants.length,
+    zones: db.zones || [],
+    stages: db.stages || [],
+    showCategories: db.showCategories || [],
+    standCategories: db.standCategories || [],
+    sponsors: db.sponsors || { gold: [], silver: [] },
+    participantsCount: db.participants ? db.participants.length : 0,
     timestamp: new Date().toLocaleTimeString()
   });
 });

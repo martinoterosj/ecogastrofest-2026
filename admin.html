@@ -171,10 +171,13 @@
               🗺️ Marcado de Zonas: Plaza Independencia
             </h3>
             <p style="font-size: 0.8rem; color: var(--text-secondary);">
-              Haz clic directamente en el mapa satelital para ubicar o reposicionar zonas con nombre, color e icono.
+              Haz clic o arrastra pines directamente en el mapa satelital para ubicar o reposicionar zonas con nombre, color e icono.
             </p>
           </div>
           <div class="admin-section-actions">
+            <button class="btn-admin-action" id="btnToggleGrid" onclick="AdminApp.toggleMapGrid()">
+              📐 Cuadrícula / Guías
+            </button>
             <button class="btn-admin-create" onclick="AdminApp.resetZoneForm()">
               ➕ Nueva Zona
             </button>
@@ -190,68 +193,152 @@
               <span style="font-size:0.75rem; font-weight:800; color:var(--accent-secondary); text-transform:uppercase;">
                 📍 Mapa Satelital Interactivo (San José de Mayo)
               </span>
-              <span style="font-size:0.72rem; color:var(--text-muted);">Toca para fijar coordenadas X/Y</span>
+              <span style="font-size:0.72rem; color:var(--text-muted);">Toca o arrastra para fijar X/Y</span>
             </div>
 
             <div class="admin-satellite-map" id="adminSatelliteMap" onclick="AdminApp.handleMapClick(event)">
               <img src="images/map-plaza-independencia.webp" alt="Plaza Independencia - San José de Mayo" class="admin-satellite-img" id="adminMapImage" loading="eager">
+              
+              <!-- Grid overlay for precise alignment (toggleable) -->
+              <div class="map-grid-overlay" id="mapGridOverlay" style="display: none;">
+                <div class="grid-line grid-v" style="left: 25%;"><span>25%</span></div>
+                <div class="grid-line grid-v grid-center" style="left: 50%;"><span>50%</span></div>
+                <div class="grid-line grid-v" style="left: 75%;"><span>75%</span></div>
+                <div class="grid-line grid-h" style="top: 25%;"><span>25%</span></div>
+                <div class="grid-line grid-h grid-center" style="top: 50%;"><span>50%</span></div>
+                <div class="grid-line grid-h" style="top: 75%;"><span>75%</span></div>
+              </div>
+
               <div id="adminMapPinsContainer" class="admin-map-pins-layer">
                 <!-- Dynamic zone markers injected by AdminApp.renderMapEditor() -->
               </div>
               <div id="adminCrosshairPin" class="map-crosshair-pin" style="display: none;">
-                <span class="crosshair-icon">📍</span>
+                <span class="crosshair-icon" id="adminCrosshairIcon">📍</span>
                 <span class="crosshair-badge" id="adminCrosshairCoords">50%, 50%</span>
+              </div>
+            </div>
+
+            <!-- Quick Landmark Placement Chips (Plaza Independencia) -->
+            <div class="map-presets-wrapper">
+              <span style="font-size: 0.72rem; font-weight: 800; color: var(--accent-secondary); text-transform: uppercase;">
+                ⚡ Atajos Rápidos de Plaza Independencia:
+              </span>
+              <div class="map-preset-chips">
+                <button type="button" class="btn-preset-chip" onclick="AdminApp.setPresetLocation(50, 15, '🎸 Escenario Principal Solís', 'ESCENARIO SOLÍS', '🎸', '#ef4444', 'Escenario Principal')">
+                  🎸 Escenario Norte (25 de Mayo)
+                </button>
+                <button type="button" class="btn-preset-chip" onclick="AdminApp.setPresetLocation(50, 50, '🏛️ Monumento Central & Punto Verde', 'PUNTO CENTRAL', '🏛️', '#3b82f6', 'Informes & Ecología')">
+                  🏛️ Monumento Central
+                </button>
+                <button type="button" class="btn-preset-chip" onclick="AdminApp.setPresetLocation(78, 42, '🥩 Pastura Regenerativa & Asados', 'ZONA BRASAS', '🥩', '#f97316', 'Gastronomía')">
+                  🥩 Parrillas Este (Asamblea)
+                </button>
+                <button type="button" class="btn-preset-chip" onclick="AdminApp.setPresetLocation(74, 78, '🍺 Patio Cervecero & Eco-Vasos', 'PATIO CERVECERO', '🍺', '#f59e0b', 'Bebidas')">
+                  🍺 Patio Cervecero Sur (18 de Julio)
+                </button>
+                <button type="button" class="btn-preset-chip" onclick="AdminApp.setPresetLocation(26, 78, '🎤 Patio Acústico Solar', 'PATIO ACÚSTICO', '🎤', '#8b5cf6', 'Escenario Acústico')">
+                  🎤 Acústico Suroeste
+                </button>
+                <button type="button" class="btn-preset-chip" onclick="AdminApp.setPresetLocation(22, 42, '🌱 100% Plant Based & Orgánico', 'ZONA VERDE', '🌱', '#10b981', 'Gastronomía Saludable')">
+                  🌱 Saludable Oeste (Artigas)
+                </button>
+                <button type="button" class="btn-preset-chip" onclick="AdminApp.setPresetLocation(48, 32, '🍷 Domo Gourmet & Catas', 'DOMO GOURMET', '🍷', '#ec4899', 'Catas & Masterclass')">
+                  🍷 Domo Gourmet
+                </button>
               </div>
             </div>
           </div>
 
           <!-- Zone Form Panel -->
           <div class="admin-zone-form-card">
-            <h4 id="zoneFormHeading" style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 800; color: #60a5fa; margin-bottom: 8px;">
-              ➕ Crear / Modificar Zona
-            </h4>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <h4 id="zoneFormHeading" style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 800; color: #60a5fa; margin: 0;">
+                ➕ Crear / Modificar Zona
+              </h4>
+              <span id="zoneEditBadge" style="display: none; font-size: 0.68rem; background: rgba(59,130,246,0.2); color: #93c5fd; padding: 2px 6px; border-radius: 4px; font-weight: 800;">EN EDICIÓN</span>
+            </div>
             
             <form id="formAdminZone" onsubmit="AdminApp.saveZone(event)" style="display: flex; flex-direction: column; gap: 10px;">
               <input type="hidden" id="zoneIdInput" value="">
 
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 8px;">
                 <div class="admin-form-group">
                   <label>Código de Zona *</label>
-                  <input type="text" id="zoneCodeInput" placeholder="Ej: ZONA A" required>
+                  <input type="text" id="zoneCodeInput" placeholder="Ej: ZONA BRASAS" required oninput="AdminApp.updatePreviewPin()">
                 </div>
                 <div class="admin-form-group">
                   <label>Icono Emoji</label>
-                  <input type="text" id="zoneIconInput" placeholder="🥩" value="📍">
+                  <input type="text" id="zoneIconInput" placeholder="🥩" value="📍" oninput="AdminApp.updatePreviewPin()">
+                </div>
+              </div>
+
+              <!-- Quick Emoji Palette -->
+              <div class="quick-emoji-bar">
+                <span class="quick-picker-label">Emojis rápidos:</span>
+                <div class="quick-emojis-list">
+                  <button type="button" class="btn-emoji-choice" onclick="AdminApp.pickEmoji('🎸')">🎸</button>
+                  <button type="button" class="btn-emoji-choice" onclick="AdminApp.pickEmoji('🥩')">🥩</button>
+                  <button type="button" class="btn-emoji-choice" onclick="AdminApp.pickEmoji('🍺')">🍺</button>
+                  <button type="button" class="btn-emoji-choice" onclick="AdminApp.pickEmoji('🌱')">🌱</button>
+                  <button type="button" class="btn-emoji-choice" onclick="AdminApp.pickEmoji('🍷')">🍷</button>
+                  <button type="button" class="btn-emoji-choice" onclick="AdminApp.pickEmoji('🍔')">🍔</button>
+                  <button type="button" class="btn-emoji-choice" onclick="AdminApp.pickEmoji('🍦')">🍦</button>
+                  <button type="button" class="btn-emoji-choice" onclick="AdminApp.pickEmoji('🎪')">🎪</button>
+                  <button type="button" class="btn-emoji-choice" onclick="AdminApp.pickEmoji('🏛️')">🏛️</button>
+                  <button type="button" class="btn-emoji-choice" onclick="AdminApp.pickEmoji('🪴')">🪴</button>
+                  <button type="button" class="btn-emoji-choice" onclick="AdminApp.pickEmoji('🎟️')">🎟️</button>
+                  <button type="button" class="btn-emoji-choice" onclick="AdminApp.pickEmoji('🚑')">🚑</button>
                 </div>
               </div>
 
               <div class="admin-form-group">
-                <label>Nombre de la Zona *</label>
-                <input type="text" id="zoneNameInput" placeholder="Ej: 🥩 Pastura & Asados Criollos" required>
+                <label>Nombre Descriptivo de la Zona *</label>
+                <input type="text" id="zoneNameInput" placeholder="Ej: 🥩 Pastura & Asados Criollos" required oninput="AdminApp.updatePreviewPin()">
               </div>
 
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <div class="admin-form-group">
                   <label>Categoría</label>
-                  <input type="text" id="zoneCategoryInput" placeholder="Ej: Gastronomía">
+                  <input type="text" id="zoneCategoryInput" placeholder="Ej: Gastronomía" list="zoneCatSuggestions">
+                  <datalist id="zoneCatSuggestions">
+                    <option value="Gastronomía">
+                    <option value="Escenario Principal">
+                    <option value="Escenario Acústico">
+                    <option value="Bebidas">
+                    <option value="Gastronomía Saludable">
+                    <option value="Catas & Masterclass">
+                    <option value="Informes & Ecología">
+                  </datalist>
                 </div>
                 <div class="admin-form-group">
                   <label>Color de Marcador</label>
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <input type="color" id="zoneColorInput" value="#10b981" oninput="document.getElementById('zoneColorHex').textContent = this.value" style="width: 44px; height: 38px; padding: 2px; border-radius: var(--radius-sm); border: 1px solid var(--admin-border); cursor: pointer; background: transparent;">
-                    <span id="zoneColorHex" style="font-size: 0.8rem; font-family: monospace; color: var(--text-muted);">#10b981</span>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <input type="color" id="zoneColorInput" value="#10b981" oninput="AdminApp.updateColorInput(this.value)" style="width: 38px; height: 36px; padding: 2px; border-radius: var(--radius-sm); border: 1px solid var(--admin-border); cursor: pointer; background: transparent;">
+                    <span id="zoneColorHex" style="font-size: 0.78rem; font-family: monospace; color: var(--text-muted);">#10b981</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Coordinates (auto-filled on map click) -->
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.25); padding: 8px; border-radius: var(--radius-sm); border: 1px dashed var(--admin-border-subtle);">
+              <!-- Quick Color Swatches -->
+              <div class="quick-colors-bar">
+                <button type="button" class="btn-color-swatch" style="background:#ef4444;" onclick="AdminApp.updateColorInput('#ef4444')" title="Rojo Solís"></button>
+                <button type="button" class="btn-color-swatch" style="background:#f97316;" onclick="AdminApp.updateColorInput('#f97316')" title="Naranja Brasas"></button>
+                <button type="button" class="btn-color-swatch" style="background:#f59e0b;" onclick="AdminApp.updateColorInput('#f59e0b')" title="Ámbar Cerveza"></button>
+                <button type="button" class="btn-color-swatch" style="background:#10b981;" onclick="AdminApp.updateColorInput('#10b981')" title="Verde Sustentable"></button>
+                <button type="button" class="btn-color-swatch" style="background:#06b6d4;" onclick="AdminApp.updateColorInput('#06b6d4')" title="Cian Accesos"></button>
+                <button type="button" class="btn-color-swatch" style="background:#3b82f6;" onclick="AdminApp.updateColorInput('#3b82f6')" title="Azul Central"></button>
+                <button type="button" class="btn-color-swatch" style="background:#8b5cf6;" onclick="AdminApp.updateColorInput('#8b5cf6')" title="Violeta Acústico"></button>
+                <button type="button" class="btn-color-swatch" style="background:#ec4899;" onclick="AdminApp.updateColorInput('#ec4899')" title="Rosa Domo"></button>
+              </div>
+
+              <!-- Coordinates (auto-filled on map click / drag) -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: var(--radius-sm); border: 1px dashed var(--admin-border-subtle);">
                 <div class="admin-form-group">
-                  <label style="font-size:0.7rem;">Posición X (%)</label>
+                  <label style="font-size:0.7rem; color: #93c5fd;">📍 Posición X (% Ancho)</label>
                   <input type="number" id="zoneXInput" min="0" max="100" step="1" value="50" required oninput="AdminApp.updatePreviewPin()">
                 </div>
                 <div class="admin-form-group">
-                  <label style="font-size:0.7rem;">Posición Y (%)</label>
+                  <label style="font-size:0.7rem; color: #93c5fd;">📍 Posición Y (% Alto)</label>
                   <input type="number" id="zoneYInput" min="0" max="100" step="1" value="50" required oninput="AdminApp.updatePreviewPin()">
                 </div>
               </div>
@@ -261,9 +348,17 @@
                 <textarea id="zoneDescInput" rows="2" placeholder="Detalles de lo que se ubica en este sector de la plaza..."></textarea>
               </div>
 
+              <!-- Associated Stands/Shows Info Pill (Visible when editing) -->
+              <div id="zoneAssociatedEntitiesBox" style="display: none; background: rgba(255,255,255,0.03); border: 1px solid var(--admin-border-subtle); padding: 8px 10px; border-radius: var(--radius-sm); font-size: 0.76rem;">
+                <!-- Injected when selecting zone -->
+              </div>
+
               <div style="display: flex; gap: 8px; margin-top: 4px;">
                 <button type="button" class="btn-admin-action" onclick="AdminApp.resetZoneForm()" style="flex: 1;">
                   Limpiar
+                </button>
+                <button type="button" id="btnDeleteZoneInForm" class="btn-admin-action btn-danger" style="display: none;" onclick="AdminApp.deleteCurrentZone()">
+                  🗑️ Eliminar
                 </button>
                 <button type="submit" class="btn-admin-create" style="flex: 2;">
                   💾 Guardar Zona
@@ -565,8 +660,11 @@
           </div>
 
           <div class="admin-form-group">
-            <label>Sector / Zona *</label>
-            <input type="text" id="standZoneInput" required placeholder="Ej: Sector Fuego A">
+            <label>Sector / Zona en Mapa *</label>
+            <select id="standZoneSelect" onchange="AdminApp.handleStandZoneSelectChange(this.value)" style="background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 10px; border-radius: var(--radius-sm); font-size: 0.9rem;">
+              <!-- Populated dynamically with map zones -->
+            </select>
+            <input type="text" id="standZoneInput" required placeholder="Ej: Sector Fuego A" style="margin-top: 4px; display: none;">
           </div>
 
           <div class="admin-form-group">

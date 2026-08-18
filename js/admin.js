@@ -535,14 +535,64 @@ const AdminApp = {
     }
   },
 
+  populateStandZonesSelect(selectedZone) {
+    const zoneSel = document.getElementById('standZoneSelect');
+    const zoneInput = document.getElementById('standZoneInput');
+    if (!zoneSel) return;
+
+    const zones = this.dbState.zones || [];
+    let optionsHtml = zones.map(z => `
+      <option value="${z.code}">${z.icon || '📍'} ${z.code} - ${z.name}</option>
+    `).join('');
+
+    optionsHtml += `<option value="custom">✏️ Otro sector personalizado...</option>`;
+    zoneSel.innerHTML = optionsHtml;
+
+    if (selectedZone) {
+      const match = zones.find(z => z.code.toLowerCase() === selectedZone.toLowerCase() || z.name.toLowerCase() === selectedZone.toLowerCase());
+      if (match) {
+        zoneSel.value = match.code;
+        if (zoneInput) {
+          zoneInput.value = match.code;
+          zoneInput.style.display = 'none';
+        }
+      } else {
+        zoneSel.value = 'custom';
+        if (zoneInput) {
+          zoneInput.value = selectedZone;
+          zoneInput.style.display = 'block';
+        }
+      }
+    } else if (zones.length > 0) {
+      zoneSel.value = zones[0].code;
+      if (zoneInput) {
+        zoneInput.value = zones[0].code;
+        zoneInput.style.display = 'none';
+      }
+    }
+  },
+
+  handleStandZoneSelectChange(val) {
+    const zoneInput = document.getElementById('standZoneInput');
+    if (!zoneInput) return;
+    if (val === 'custom') {
+      zoneInput.style.display = 'block';
+      zoneInput.value = '';
+      zoneInput.focus();
+    } else {
+      zoneInput.style.display = 'none';
+      zoneInput.value = val;
+    }
+  },
+
   openNewStandModal() {
     this.editingStandId = null;
     this.populateStandCategoriesSelect();
+    this.populateStandZonesSelect();
 
     document.getElementById('modalStandTitle').textContent = '➕ Alta de Nuevo Stand Gastronómico';
     document.getElementById('standNameInput').value = '';
     document.getElementById('standNumberInput').value = `Stand #${String(this.dbState.stands.length + 1).padStart(2, '0')}`;
-    document.getElementById('standZoneInput').value = 'Sector Fuego A';
     document.getElementById('standCategoryNameInput').value = 'Carnes & Brasas';
     document.getElementById('standDishInput').value = '';
     document.getElementById('standEmojiInput').value = '🥩';
@@ -558,11 +608,11 @@ const AdminApp = {
 
     this.editingStandId = id;
     this.populateStandCategoriesSelect();
+    this.populateStandZonesSelect(stand.zone);
 
     document.getElementById('modalStandTitle').textContent = '✏️ Modificar Datos del Stand';
     document.getElementById('standNameInput').value = stand.name || '';
     document.getElementById('standNumberInput').value = stand.number || '';
-    document.getElementById('standZoneInput').value = stand.zone || '';
     if (document.getElementById('standCategoryInput')) document.getElementById('standCategoryInput').value = stand.category;
     document.getElementById('standCategoryNameInput').value = stand.categoryName || '';
     document.getElementById('standDishInput').value = stand.featuredDish || '';
@@ -767,6 +817,9 @@ const AdminApp = {
   // =========================================================================
   // 3. INTERACTIVE MAP & ZONE MARKER TOOL (PLAZA INDEPENDENCIA)
   // =========================================================================
+  isDraggingPin: false,
+  gridVisible: false,
+
   renderMapEditor() {
     if (!this.dbState) return;
     if (!this.dbState.zones) {
@@ -782,11 +835,23 @@ const AdminApp = {
       pinsContainer.innerHTML = this.dbState.zones.map(z => {
         const isSelected = this.editingZoneId === z.id;
         const color = z.color || '#10b981';
+        
+        // Count matching stands & shows
+        const matchingStands = (this.dbState.stands || []).filter(st => 
+          st.zone && (st.zone.toLowerCase().includes(z.code.toLowerCase()) || z.name.toLowerCase().includes(st.zone.toLowerCase()))
+        );
+        const matchingShows = (this.dbState.schedule || []).filter(ev => 
+          ev.stageName && (ev.stageName.toLowerCase().includes(z.name.toLowerCase()) || z.name.toLowerCase().includes(ev.stageName.toLowerCase()))
+        );
+        const standsCount = matchingStands.length;
+        const showsCount = matchingShows.length;
+
         return `
           <div class="map-zone-pin ${isSelected ? 'is-selected' : ''}" 
+               id="adminPin_${z.id}"
+               data-id="${z.id}"
                style="left: ${z.x}%; top: ${z.y}%; --pin-color: ${color};" 
-               onclick="event.stopPropagation(); AdminApp.selectZoneForEdit('${z.id}')"
-               title="${z.code}: ${z.name}">
+               title="${z.code}: ${z.name} (${standsCount} puestos, ${showsCount} shows)">
             <div class="map-zone-pin-head" style="background: ${color};">
               <span>${z.icon || '📍'}</span>
             </div>
@@ -796,6 +861,14 @@ const AdminApp = {
           </div>
         `;
       }).join('');
+
+      // Setup drag and click listeners on all pins
+      this.dbState.zones.forEach(z => {
+        const pinEl = document.getElementById(`adminPin_${z.id}`);
+        if (pinEl) {
+          this.setupPinDrag(pinEl, z.id);
+        }
+      });
     }
 
     // Render Cards in Grid Below
@@ -813,6 +886,15 @@ const AdminApp = {
       listGrid.innerHTML = this.dbState.zones.map(z => {
         const isSelected = this.editingZoneId === z.id;
         const color = z.color || '#10b981';
+
+        // Count associated stands and shows
+        const matchingStands = (this.dbState.stands || []).filter(st => 
+          st.zone && (st.zone.toLowerCase().includes(z.code.toLowerCase()) || z.name.toLowerCase().includes(st.zone.toLowerCase()))
+        );
+        const matchingShows = (this.dbState.schedule || []).filter(ev => 
+          ev.stageName && (ev.stageName.toLowerCase().includes(z.name.toLowerCase()) || z.name.toLowerCase().includes(ev.stageName.toLowerCase()))
+        );
+
         return `
           <div class="admin-zone-card ${isSelected ? 'is-editing' : ''}" style="--zone-color: ${color};">
             <div class="admin-zone-card-top">
@@ -834,6 +916,21 @@ const AdminApp = {
 
             ${z.description ? `<p class="admin-zone-desc">${z.description}</p>` : ''}
 
+            <!-- Associated Entities Summary -->
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px;">
+              ${matchingStands.length > 0 ? `
+                <span class="zone-entities-pill" style="border-left: 2px solid #10b981;">
+                  🍴 <strong>${matchingStands.length}</strong> ${matchingStands.length === 1 ? 'Puesto' : 'Puestos'} (${matchingStands.map(s => s.name).slice(0, 2).join(', ')}${matchingStands.length > 2 ? '...' : ''})
+                </span>
+              ` : '<span class="zone-entities-pill" style="opacity: 0.6;">🍴 Sin puestos asignados</span>'}
+
+              ${matchingShows.length > 0 ? `
+                <span class="zone-entities-pill" style="border-left: 2px solid #f59e0b;">
+                  🎤 <strong>${matchingShows.length}</strong> ${matchingShows.length === 1 ? 'Show' : 'Shows'}
+                </span>
+              ` : ''}
+            </div>
+
             <div class="admin-zone-actions-bar">
               <button class="btn-admin-action" onclick="AdminApp.selectZoneForEdit('${z.id}')" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd;">
                 ✏️ Editar / Mover
@@ -848,7 +945,104 @@ const AdminApp = {
     }
   },
 
+  setupPinDrag(pinEl, zoneId) {
+    let startX = 0, startY = 0;
+    let hasMoved = false;
+
+    const onStart = (e) => {
+      e.stopPropagation();
+      this.isDraggingPin = true;
+      hasMoved = false;
+      
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      startX = clientX;
+      startY = clientY;
+
+      pinEl.classList.add('is-dragging');
+
+      const onMove = (moveEvent) => {
+        const curX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
+        const curY = moveEvent.touches ? moveEvent.touches[0].clientY : moveEvent.clientY;
+        
+        if (Math.abs(curX - startX) > 3 || Math.abs(curY - startY) > 3) {
+          hasMoved = true;
+        }
+
+        const mapEl = document.getElementById('adminSatelliteMap');
+        if (!mapEl) return;
+        const rect = mapEl.getBoundingClientRect();
+        
+        const clickX = curX - rect.left;
+        const clickY = curY - rect.top;
+
+        const xPercent = Math.max(0, Math.min(100, Math.round((clickX / rect.width) * 100)));
+        const yPercent = Math.max(0, Math.min(100, Math.round((clickY / rect.height) * 100)));
+
+        pinEl.style.left = `${xPercent}%`;
+        pinEl.style.top = `${yPercent}%`;
+
+        // Update form if editing this zone
+        if (this.editingZoneId === zoneId || !this.editingZoneId) {
+          document.getElementById('zoneXInput').value = xPercent;
+          document.getElementById('zoneYInput').value = yPercent;
+        }
+
+        const crosshair = document.getElementById('adminCrosshairPin');
+        const coordsBadge = document.getElementById('adminCrosshairCoords');
+        if (crosshair) {
+          crosshair.style.display = 'flex';
+          crosshair.style.left = `${xPercent}%`;
+          crosshair.style.top = `${yPercent}%`;
+          if (coordsBadge) coordsBadge.textContent = `${xPercent}%, ${yPercent}%`;
+        }
+      };
+
+      const onEnd = () => {
+        this.isDraggingPin = false;
+        pinEl.classList.remove('is-dragging');
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('touchmove', onMove);
+        window.removeEventListener('mouseup', onEnd);
+        window.removeEventListener('touchend', onEnd);
+
+        if (hasMoved) {
+          const mapEl = document.getElementById('adminSatelliteMap');
+          if (mapEl) {
+            const rect = mapEl.getBoundingClientRect();
+            const leftVal = parseFloat(pinEl.style.left) || 50;
+            const topVal = parseFloat(pinEl.style.top) || 50;
+            
+            const zone = this.dbState.zones.find(z => z.id === zoneId);
+            if (zone) {
+              zone.x = Math.round(leftVal);
+              zone.y = Math.round(topVal);
+              this.persistOffline();
+              this.renderMapEditor();
+              if (this.editingZoneId === zoneId) {
+                this.selectZoneForEdit(zoneId);
+              }
+            }
+          }
+        } else {
+          // It was a click/tap on the pin
+          this.selectZoneForEdit(zoneId);
+        }
+      };
+
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('mouseup', onEnd);
+      window.addEventListener('touchend', onEnd);
+    };
+
+    pinEl.addEventListener('mousedown', onStart);
+    pinEl.addEventListener('touchstart', onStart, { passive: true });
+  },
+
   handleMapClick(event) {
+    if (this.isDraggingPin) return;
+
     const mapEl = document.getElementById('adminSatelliteMap');
     if (!mapEl) return;
 
@@ -864,25 +1058,112 @@ const AdminApp = {
 
     const crosshair = document.getElementById('adminCrosshairPin');
     const coordsBadge = document.getElementById('adminCrosshairCoords');
+    const crosshairIcon = document.getElementById('adminCrosshairIcon');
+    const currentIcon = document.getElementById('zoneIconInput').value || '📍';
+
     if (crosshair) {
       crosshair.style.display = 'flex';
       crosshair.style.left = `${xPercent}%`;
       crosshair.style.top = `${yPercent}%`;
       if (coordsBadge) coordsBadge.textContent = `${xPercent}%, ${yPercent}%`;
+      if (crosshairIcon) crosshairIcon.textContent = currentIcon;
+    }
+
+    if (this.editingZoneId && this.dbState && this.dbState.zones) {
+      const activePin = document.getElementById(`adminPin_${this.editingZoneId}`);
+      if (activePin) {
+        activePin.style.left = `${xPercent}%`;
+        activePin.style.top = `${yPercent}%`;
+      }
     }
   },
 
   updatePreviewPin() {
     const x = Number(document.getElementById('zoneXInput').value) || 50;
     const y = Number(document.getElementById('zoneYInput').value) || 50;
+    const code = document.getElementById('zoneCodeInput').value.trim() || 'ZONA';
+    const icon = document.getElementById('zoneIconInput').value.trim() || '📍';
+    const color = document.getElementById('zoneColorInput').value || '#10b981';
 
     const crosshair = document.getElementById('adminCrosshairPin');
     const coordsBadge = document.getElementById('adminCrosshairCoords');
+    const crosshairIcon = document.getElementById('adminCrosshairIcon');
+
     if (crosshair) {
       crosshair.style.display = 'flex';
       crosshair.style.left = `${x}%`;
       crosshair.style.top = `${y}%`;
-      if (coordsBadge) coordsBadge.textContent = `${x}%, ${y}%`;
+      if (coordsBadge) coordsBadge.textContent = `${code} (${x}%, ${y}%)`;
+      if (crosshairIcon) crosshairIcon.textContent = icon;
+    }
+
+    if (this.editingZoneId) {
+      const activePin = document.getElementById(`adminPin_${this.editingZoneId}`);
+      if (activePin) {
+        activePin.style.left = `${x}%`;
+        activePin.style.top = `${y}%`;
+        activePin.style.setProperty('--pin-color', color);
+        const head = activePin.querySelector('.map-zone-pin-head');
+        const badge = activePin.querySelector('.map-zone-pin-badge');
+        if (head) {
+          head.style.background = color;
+          const span = head.querySelector('span');
+          if (span) span.textContent = icon;
+        }
+        if (badge) {
+          badge.style.borderColor = color;
+          badge.textContent = code;
+        }
+      }
+    }
+  },
+
+  pickEmoji(emoji) {
+    document.getElementById('zoneIconInput').value = emoji;
+    this.updatePreviewPin();
+  },
+
+  updateColorInput(hex) {
+    document.getElementById('zoneColorInput').value = hex;
+    const hexLabel = document.getElementById('zoneColorHex');
+    if (hexLabel) hexLabel.textContent = hex;
+    this.updatePreviewPin();
+  },
+
+  setPresetLocation(x, y, name, code, icon, color, category) {
+    document.getElementById('zoneXInput').value = x;
+    document.getElementById('zoneYInput').value = y;
+    
+    // Only overwrite name/code if creating new or empty
+    if (!this.editingZoneId || !document.getElementById('zoneCodeInput').value) {
+      document.getElementById('zoneNameInput').value = name;
+      document.getElementById('zoneCodeInput').value = code;
+      document.getElementById('zoneIconInput').value = icon;
+      document.getElementById('zoneCategoryInput').value = category || 'General';
+      this.updateColorInput(color);
+    } else {
+      this.updateColorInput(color);
+      document.getElementById('zoneIconInput').value = icon;
+    }
+
+    this.updatePreviewPin();
+  },
+
+  toggleMapGrid() {
+    const grid = document.getElementById('mapGridOverlay');
+    const btn = document.getElementById('btnToggleGrid');
+    if (!grid) return;
+
+    this.gridVisible = !this.gridVisible;
+    grid.style.display = this.gridVisible ? 'block' : 'none';
+    if (btn) {
+      if (this.gridVisible) {
+        btn.classList.add('btn-success');
+        btn.innerHTML = '📐 Guías Activas ✓';
+      } else {
+        btn.classList.remove('btn-success');
+        btn.innerHTML = '📐 Cuadrícula / Guías';
+      }
     }
   },
 
@@ -893,6 +1174,13 @@ const AdminApp = {
 
     this.editingZoneId = id;
     document.getElementById('zoneFormHeading').textContent = `✏️ Modificar Zona: ${zone.code}`;
+    
+    const editBadge = document.getElementById('zoneEditBadge');
+    if (editBadge) editBadge.style.display = 'inline-block';
+
+    const delBtn = document.getElementById('btnDeleteZoneInForm');
+    if (delBtn) delBtn.style.display = 'inline-flex';
+
     document.getElementById('zoneIdInput').value = zone.id;
     document.getElementById('zoneCodeInput').value = zone.code || '';
     document.getElementById('zoneNameInput').value = zone.name || '';
@@ -904,6 +1192,26 @@ const AdminApp = {
     document.getElementById('zoneYInput').value = zone.y !== undefined ? zone.y : 50;
     document.getElementById('zoneDescInput').value = zone.description || '';
 
+    // Render Associated Stands and Shows in Form
+    const matchingStands = (this.dbState.stands || []).filter(st => 
+      st.zone && (st.zone.toLowerCase().includes(zone.code.toLowerCase()) || zone.name.toLowerCase().includes(st.zone.toLowerCase()))
+    );
+    const matchingShows = (this.dbState.schedule || []).filter(ev => 
+      ev.stageName && (ev.stageName.toLowerCase().includes(zone.name.toLowerCase()) || zone.name.toLowerCase().includes(ev.stageName.toLowerCase()))
+    );
+
+    const entitiesBox = document.getElementById('zoneAssociatedEntitiesBox');
+    if (entitiesBox) {
+      entitiesBox.style.display = 'block';
+      entitiesBox.innerHTML = `
+        <strong style="color: #60a5fa;">📊 Elementos asignados a este sector:</strong>
+        <div style="margin-top: 4px; color: var(--text-secondary); line-height: 1.4;">
+          ${matchingStands.length > 0 ? `🍴 <strong>${matchingStands.length} Stands:</strong> ${matchingStands.map(s => s.name).join(', ')}<br>` : '🍴 <em>Sin stands asignados aún.</em><br>'}
+          ${matchingShows.length > 0 ? `🎤 <strong>${matchingShows.length} Shows:</strong> ${matchingShows.map(s => s.title).join(', ')}` : '🎤 <em>Sin shows programados en este escenario.</em>'}
+        </div>
+      `;
+    }
+
     this.updatePreviewPin();
     this.renderMapEditor();
   },
@@ -911,6 +1219,16 @@ const AdminApp = {
   resetZoneForm() {
     this.editingZoneId = null;
     document.getElementById('zoneFormHeading').textContent = '➕ Crear / Modificar Zona';
+    
+    const editBadge = document.getElementById('zoneEditBadge');
+    if (editBadge) editBadge.style.display = 'none';
+
+    const delBtn = document.getElementById('btnDeleteZoneInForm');
+    if (delBtn) delBtn.style.display = 'none';
+
+    const entitiesBox = document.getElementById('zoneAssociatedEntitiesBox');
+    if (entitiesBox) entitiesBox.style.display = 'none';
+
     document.getElementById('zoneIdInput').value = '';
     document.getElementById('zoneCodeInput').value = '';
     document.getElementById('zoneNameInput').value = '';
@@ -985,6 +1303,12 @@ const AdminApp = {
     this.persistOffline();
     this.resetZoneForm();
     alert('✅ ¡Zona guardada exitosamente en el mapa de Plaza Independencia!');
+  },
+
+  async deleteCurrentZone() {
+    if (this.editingZoneId) {
+      await this.deleteZone(this.editingZoneId);
+    }
   },
 
   async deleteZone(id) {

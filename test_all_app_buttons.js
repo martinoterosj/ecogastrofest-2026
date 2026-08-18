@@ -217,6 +217,25 @@ async function testAdminApp() {
   assert(document.getElementById('zoneXInput').value !== '', `Click en mapa captura coordenada X%`);
   assert(document.getElementById('zoneYInput').value !== '', `Click en mapa captura coordenada Y%`);
 
+  // Test Landmark Preset Quick Placement
+  AdminApp.setPresetLocation(50, 15, 'Escenario Solís Norte', 'ESCENARIO SOLÍS', '🎸', '#ef4444', 'Escenario Principal');
+  assert(document.getElementById('zoneXInput').value === '50' && document.getElementById('zoneYInput').value === '15', `Atajo de Plaza Independencia posiciona coordenadas X=50%, Y=15%`);
+  assert(document.getElementById('zoneCodeInput').value === 'ESCENARIO SOLÍS', `Atajo asigna código de zona automáticamente`);
+
+  // Test Quick Emoji Picker
+  AdminApp.pickEmoji('🍺');
+  assert(document.getElementById('zoneIconInput').value === '🍺', `Paleta rápida de emojis asigna emoji al marcador`);
+
+  // Test Quick Color Palette
+  AdminApp.updateColorInput('#f97316');
+  assert(document.getElementById('zoneColorInput').value === '#f97316', `Paleta rápida de colores asigna HEX (#f97316)`);
+
+  // Test Grid / Guides Toggle
+  AdminApp.toggleMapGrid();
+  assert(AdminApp.gridVisible === true && document.getElementById('mapGridOverlay').style.display === 'block', `Botón de Guías/Cuadrícula activa la capa de alineación porcentual`);
+  AdminApp.toggleMapGrid();
+  assert(AdminApp.gridVisible === false, `Botón de Guías/Cuadrícula oculta la capa correctamente`);
+
   // Test creating a new zone
   document.getElementById('zoneCodeInput').value = 'ZONA TEST';
   document.getElementById('zoneNameInput').value = 'Sector Degustación';
@@ -229,10 +248,20 @@ async function testAdminApp() {
   const addedZone = AdminApp.dbState.zones.find(z => z.code === 'ZONA TEST');
   assert(addedZone !== undefined, `Nueva zona guardada y marcada en el mapa con coordenadas y color`);
 
+  // Test selecting and editing the zone
   if (addedZone) {
+    AdminApp.selectZoneForEdit(addedZone.id);
+    assert(AdminApp.editingZoneId === addedZone.id, `Seleccionar zona para editar carga sus datos y activa modo edición`);
+
     await AdminApp.deleteZone(addedZone.id);
     assert(!AdminApp.dbState.zones.some(z => z.id === addedZone.id), `Zona eliminada correctamente del mapa`);
   }
+
+  // Test Stand-Zone Linking in Stand Modal
+  AdminApp.openNewStandModal();
+  const standZoneSel = document.getElementById('standZoneSelect');
+  assert(standZoneSel && standZoneSel.options.length > 0, `Modal de stands vincula selector dinámico de zonas creadas en el mapa`);
+  AdminApp.closeStandModal();
 
   // 4. Test Schedule Management
   console.log('\n4. Probando Acciones de Shows (En Vivo, Retraso, Finalizar):');
