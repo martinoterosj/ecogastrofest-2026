@@ -164,7 +164,10 @@ const Stands = {
     const standSelect = document.getElementById('raffleStandSelect');
     if (standSelect) {
       for (let i = 0; i < standSelect.options.length; i++) {
-        if (standSelect.options[i].text.includes(standName) || standSelect.options[i].value === standName) {
+        const opt = standSelect.options[i];
+        const optText = opt.text || opt.textContent || '';
+        const optVal = opt.value || '';
+        if (optText.includes(standName) || optVal === standName) {
           standSelect.selectedIndex = i;
           break;
         }

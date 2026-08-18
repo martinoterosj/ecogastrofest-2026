@@ -111,7 +111,7 @@ app.get('/api/stands', (req, res) => {
 app.post('/api/stands', (req, res) => {
   const db = getDB();
   const newStand = {
-    id: `st-${Math.floor(10 + Math.random() * 90)}`,
+    id: req.body.id || `st-${Math.floor(10 + Math.random() * 90)}`,
     number: req.body.number,
     name: req.body.name,
     category: req.body.category || 'carnes',
@@ -125,7 +125,7 @@ app.post('/api/stands', (req, res) => {
     tags: req.body.tags || ['Especialidad Gourmet'],
     isGlutenFree: Boolean(req.body.isGlutenFree),
     isVegan: Boolean(req.body.isVegan),
-    menu: []
+    menu: req.body.menu || []
   };
   db.stands.push(newStand);
   saveDB(db);

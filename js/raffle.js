@@ -61,6 +61,7 @@ const Raffle = {
     GASTRO_DATA.stands.forEach(st => {
       const opt = document.createElement('option');
       opt.value = st.name;
+      opt.text = `${st.number} - ${st.name}`;
       opt.textContent = `${st.number} - ${st.name}`;
       select.appendChild(opt);
     });
