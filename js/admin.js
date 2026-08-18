@@ -157,6 +157,7 @@ const AdminApp = {
     if (!this.dbState.sponsors) this.dbState.sponsors = defaultData.sponsors ? { ...defaultData.sponsors } : { gold: [], silver: [] };
     if (!this.dbState.announcements) this.dbState.announcements = defaultData.announcements ? [...defaultData.announcements] : [];
     if (!this.dbState.participants) this.dbState.participants = defaultData.participants ? [...defaultData.participants] : [];
+    if (!this.dbState.users) this.dbState.users = defaultData.users ? [...defaultData.users] : [];
     return this.dbState;
   },
 
@@ -179,6 +180,7 @@ const AdminApp = {
     this.renderMapEditor();
     this.renderAnnouncements();
     this.renderRaffle();
+    this.renderUsers();
     this.renderConfig();
   },
 
@@ -1749,6 +1751,150 @@ const AdminApp = {
       this.persistOffline();
       this.renderConfig();
     }
+  },
+
+  // =========================================================================
+  // 6. USERS & MARKETING LEADS (CAMPAIGNS)
+  // =========================================================================
+  renderUsers() {
+    if (!this.dbState) return;
+    if (!this.dbState.users) {
+      this.dbState.users = window.GASTRO_DATA && GASTRO_DATA.users ? JSON.parse(JSON.stringify(GASTRO_DATA.users)) : [];
+    }
+
+    const users = this.dbState.users || [];
+
+    // Update Stats KPIs
+    const totalEl = document.getElementById('statUsersTotal');
+    const googleEl = document.getElementById('statUsersGoogle');
+    const ticketEl = document.getElementById('statUsersWithTicket');
+
+    if (totalEl) totalEl.textContent = users.length;
+    if (googleEl) googleEl.textContent = users.filter(u => u.provider === 'google').length;
+    if (ticketEl) ticketEl.textContent = users.filter(u => Boolean(u.ticketCode)).length;
+
+    // Filter by search query
+    const searchInput = document.getElementById('adminUserSearchInput');
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    const filteredUsers = query
+      ? users.filter(u => 
+          (u.name && u.name.toLowerCase().includes(query)) ||
+          (u.email && u.email.toLowerCase().includes(query)) ||
+          (u.ticketCode && u.ticketCode.toLowerCase().includes(query))
+        )
+      : users;
+
+    const tbody = document.getElementById('adminUsersTableBody');
+    if (!tbody) return;
+
+    if (filteredUsers.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">
+            ${query ? 'No se encontraron usuarios que coincidan con la búsqueda.' : 'No hay usuarios registrados aún.'}
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = filteredUsers.map(u => {
+      const isGoogle = u.provider === 'google';
+      const formattedDate = u.createdAt ? new Date(u.createdAt).toLocaleDateString('es-UY', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Hoy';
+      const initials = u.name ? u.name.substring(0, 2).toUpperCase() : 'US';
+
+      return `
+        <tr style="border-bottom: 1px solid var(--admin-border-subtle);">
+          <td style="padding: 10px 8px; display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: var(--bg-tertiary); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: var(--accent-secondary); border: 1px solid rgba(52, 211, 153, 0.3);">
+              ${u.avatar ? `<img src="${u.avatar}" alt="${u.name}" style="width:100%; height:100%; object-fit:cover;">` : initials}
+            </div>
+            <strong>${u.name || 'Visitante'}</strong>
+          </td>
+          <td style="padding: 10px 8px;">
+            ${u.email ? `<a href="mailto:${u.email}" style="color: #60a5fa; text-decoration: none; font-size: 0.85rem;">${u.email}</a>` : '<span style="color: var(--text-muted); font-size: 0.8rem;">Sin email</span>'}
+          </td>
+          <td style="padding: 10px 8px;">
+            <span style="font-size: 0.72rem; padding: 2px 8px; border-radius: var(--radius-full); font-weight: 700; ${isGoogle ? 'background: rgba(66, 133, 244, 0.18); color: #93c5fd; border: 1px solid rgba(66, 133, 244, 0.4);' : 'background: rgba(245, 158, 11, 0.18); color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.4);'}">
+              ${isGoogle ? '🔵 Google' : '👤 Invitado'}
+            </span>
+          </td>
+          <td style="padding: 10px 8px; font-size: 0.8rem; color: var(--text-secondary);">
+            ${formattedDate}
+          </td>
+          <td style="padding: 10px 8px; font-size: 0.85rem;">
+            ${u.ticketCode ? `<strong style="color: var(--color-gold);">#${u.ticketCode}</strong> <span style="font-size: 0.75rem; color: var(--text-muted);">(${u.votedStand || 'General'})</span>` : '<span style="color: var(--text-muted); font-size: 0.78rem;">-</span>'}
+          </td>
+          <td style="padding: 10px 8px; text-align: right;">
+            <button class="btn-admin-action btn-danger" onclick="AdminApp.deleteUser('${u.id}')" title="Eliminar de la lista" style="padding: 4px 8px; font-size: 0.8rem;">
+              🗑️
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  },
+
+  exportUsersCSV() {
+    const users = this.dbState.users || [];
+    if (users.length === 0) {
+      alert('⚠️ No hay usuarios registrados para exportar.');
+      return;
+    }
+
+    let csv = '\uFEFF'; // UTF-8 BOM
+    csv += 'ID,Nombre,Email,Proveedor,Fecha Registro,Golden Ticket,Stand Votado\n';
+
+    users.forEach(u => {
+      const cleanName = (u.name || '').replace(/"/g, '""');
+      const cleanEmail = (u.email || '').replace(/"/g, '""');
+      const cleanProvider = (u.provider || '').replace(/"/g, '""');
+      const cleanDate = (u.createdAt || '').replace(/"/g, '""');
+      const cleanTicket = (u.ticketCode || 'No').replace(/"/g, '""');
+      const cleanStand = (u.votedStand || '-').replace(/"/g, '""');
+
+      csv += `"${u.id}","${cleanName}","${cleanEmail}","${cleanProvider}","${cleanDate}","${cleanTicket}","${cleanStand}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `leads_gastrofest_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  },
+
+  copyAllEmails() {
+    const users = this.dbState.users || [];
+    const validEmails = users.map(u => u.email).filter(e => e && e.includes('@'));
+    const uniqueEmails = Array.from(new Set(validEmails));
+
+    if (uniqueEmails.length === 0) {
+      alert('⚠️ No hay correos electrónicos válidos registrados aún.');
+      return;
+    }
+
+    const emailListStr = uniqueEmails.join(', ');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(emailListStr).then(() => {
+        alert(`📋 ¡${uniqueEmails.length} correos electrónicos copiados al portapapeles! Listo para pegar en tu cliente de correo o plataforma de marketing.`);
+      });
+    } else {
+      prompt('Copia la lista de correos:', emailListStr);
+    }
+  },
+
+  async deleteUser(userId) {
+    if (!confirm('¿Deseas eliminar este usuario de la base de leads?')) return;
+    try {
+      await fetch(`./api/users/${userId}`, { method: 'DELETE' });
+    } catch (e) {}
+
+    this.dbState.users = (this.dbState.users || []).filter(u => u.id !== userId);
+    this.persistOffline();
+    this.renderUsers();
   }
 };
 

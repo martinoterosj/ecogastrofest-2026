@@ -12,6 +12,23 @@ Todas las modificaciones, mejoras arquitectónicas, módulos y correcciones del 
 
 ---
 
+## [1.5.0] - 2026-08-18
+
+### Added (Nuevas Funcionalidades)
+- **Base de Datos de Leads y Correos Electrónicos para Campañas de Marketing**:
+  - Almacenamiento centralizado y persistente de usuarios registrados (`data/db.json` -> `users` y `localStorage.getItem('gastrofest_registered_users')`).
+  - Endpoints REST dedicados en backend Express (`GET /api/users`, `POST /api/users`, `DELETE /api/users/:id`, `GET /api/users/export/csv`).
+  - **Pestaña de Usuarios & Campañas en el Panel de Operadores (`#pane-users`)**:
+    - Métricas en tiempo real: *Total Visitantes*, *Emails Google Verificados*, *Participantes con Golden Ticket*.
+    - **Exportación CSV en 1 Clic (`AdminApp.exportUsersCSV()`)**: Descarga directa de archivo `.csv` compatible con Excel, Google Sheets, Mailchimp, Brevo, SendGrid y Meta Ads.
+    - **Copiado Rápido de Correos (`AdminApp.copyAllEmails()`)**: Copia la lista de correos separados por comas al portapapeles con un solo toque.
+    - Buscador reactivo por nombre, email o código de ticket.
+
+### Changed (Mejoras en Suites de Pruebas)
+- **Expansión de la Suite de Pruebas (`test_all_app_buttons.js`)**: Batería ampliada a **82 pruebas** (+5 aserciones dedicadas al panel de leads, renderizado de tablas, KPIs y buscador). Total general del proyecto: **127 pruebas automatizadas al 100%**.
+
+---
+
 ## [1.4.0] - 2026-08-18
 
 ### Added (Nuevas Funcionalidades)

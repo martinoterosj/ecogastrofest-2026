@@ -111,6 +111,24 @@ const Raffle = {
     this.participants.push(newTicket);
     this.saveParticipants();
 
+    // Sincronizar lead con la base de datos de usuarios para campañas
+    if (typeof DBAdapter !== 'undefined' && DBAdapter.saveUserLead) {
+      const userLead = {
+        name,
+        ticketCode: code,
+        votedStand: stand
+      };
+      if (typeof Auth !== 'undefined' && Auth.currentUser) {
+        Object.assign(userLead, {
+          id: Auth.currentUser.id,
+          email: Auth.currentUser.email,
+          avatar: Auth.currentUser.avatar,
+          provider: Auth.currentUser.type
+        });
+      }
+      DBAdapter.saveUserLead(userLead).catch(() => {});
+    }
+
     App.playFanfare();
     App.launchConfetti();
     App.showToast(`🎉 ¡Ticket #${code} generado con éxito!`);

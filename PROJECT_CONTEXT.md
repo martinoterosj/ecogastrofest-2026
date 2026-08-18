@@ -1,7 +1,7 @@
 # 🌿 EcoGastroFest 2026 - Documento Maestro de Contexto y Arquitectura
 
 > **Fuente Única de Verdad (Single Source of Truth - SSOT)**  
-> **Versión del Proyecto:** 1.4.0  
+> **Versión del Proyecto:** 1.5.0  
 > **Ubicación:** `c:\Users\Martin\.gemini\antigravity-ide\scratch\gastrofest-app`  
 > **Última Actualización:** 18 de Agosto de 2026
 
@@ -87,7 +87,7 @@ graph TD
 | `scripts/fetch_and_convert_artists.js` | Script | Pipeline automatizado con `sharp` para procesar fotos de artistas uruguayos a WebP (<100KB). |
 | `images/artists/*.webp` | Medios | 10 fotografías optimizadas en WebP de los artistas del festival. |
 | `test_multiagent_simulation.js` | Pruebas | Framework multi-agente con 5 perfiles concurrentes (**45 aserciones**). |
-| `test_all_app_buttons.js` | Pruebas | Suite automatizada de **77 pruebas** JSDOM que valida 100% de la UI, Auth y botones. |
+| `test_all_app_buttons.js` | Pruebas | Suite automatizada de **82 pruebas** JSDOM que valida 100% de la UI, Leads, Auth y botones. |
 | `test_dynamic_system.ps1` | Pruebas | Suite automatizada de 9 pruebas de integración backend y sincronización. |
 | `test_crud.ps1` / `test_eco_sponsors.ps1` | Pruebas | Pruebas unitarias de endpoints REST en PowerShell. |
 | `github_deploy.js` | Despliegue | Script de despliegue directo a GitHub y sincronización con GitHub Pages. |
@@ -101,7 +101,7 @@ graph TD
 
 | Método | Ruta | Parámetros / Body | Descripción |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/sync` | Ninguno | Retorna el árbol completo de datos del festival. |
+| `GET` | `/api/sync` | Ninguno | Retorna el árbol completo de datos del festival (incluyendo usuarios). |
 | `PUT` | `/api/event` | Objeto `event` | Actualiza título, horarios, dirección y enlaces a mapas. |
 | `POST`| `/api/stands` | Objeto `stand` | Da de alta un nuevo puesto gastronómico. |
 | `PUT` | `/api/stands/:id` | Objeto modificado | Actualiza campos de un stand gastronómico. |
@@ -123,6 +123,10 @@ graph TD
 | `POST`| `/api/announcements` | `{ type, icon, title, message, active }` | Publica un aviso en vivo para los visitantes. |
 | `DELETE`| `/api/announcements/:id` | URL param `id` | Elimina un aviso en vivo. |
 | `POST`| `/api/raffle/register`| `{ name, phone, stand }` | Registra a un visitante y genera un ticket serial. |
+| `GET` | `/api/users` | Ninguno | Retorna la lista completa de usuarios y leads registrados. |
+| `POST`| `/api/users` | `{ id, name, email, avatar, provider }` | Registra o actualiza un lead de visitante para marketing. |
+| `DELETE`| `/api/users/:id` | URL param `id` | Elimina un lead de la base de datos. |
+| `GET` | `/api/users/export/csv` | Ninguno | Descarga directa de archivo CSV para Mailchimp / Email Marketing. |
 | `DELETE`| `/api/raffle/participants/:code`| URL param `code` | Elimina un ticket del sorteo. |
 | `POST`| `/api/auth/login` | `{ pin: "1234" }` | Autentica a un operador en el panel de control. |
 

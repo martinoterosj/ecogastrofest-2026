@@ -381,6 +381,27 @@ async function testAdminApp() {
   assert(document.querySelector('.admin-navbar-actions') !== null, `Navbar de administración contiene contenedor de acciones responsivas`);
   assert(document.querySelector('.admin-tabs-nav') !== null, `Barra de pestañas adaptativa presente`);
   assert(document.querySelectorAll('.card-row-top').length > 0, `Cards de shows y stands renderizan encabezados flexibles (.card-row-top)`);
+
+  // 10. Test Users & Marketing Leads (Campaigns)
+  console.log('\n10. Probando Directorio de Usuarios & Campañas de Marketing:');
+  AdminApp.renderUsers();
+  const usersTableBody = document.getElementById('adminUsersTableBody');
+  assert(usersTableBody !== null, `Tabla de usuarios y leads de marketing presente en el panel`);
+  assert(usersTableBody.querySelectorAll('tr').length > 0, `Tabla renderiza los usuarios registrados (${AdminApp.dbState.users.length} usuarios)`);
+
+  const statTotal = document.getElementById('statUsersTotal');
+  const statGoogle = document.getElementById('statUsersGoogle');
+  assert(statTotal && Number(statTotal.textContent) >= 3, `KPI Total Visitantes muestra conteo correcto (${statTotal.textContent})`);
+  assert(statGoogle && Number(statGoogle.textContent) >= 3, `KPI Emails Google Verificados muestra conteo correcto (${statGoogle.textContent})`);
+
+  // Test Search Filter
+  const searchInput = document.getElementById('adminUserSearchInput');
+  searchInput.value = 'martin';
+  AdminApp.renderUsers();
+  const searchRows = usersTableBody.querySelectorAll('tr');
+  assert(searchRows.length >= 1, `Buscador de leads filtra usuarios por nombre o correo`);
+  searchInput.value = '';
+  AdminApp.renderUsers();
 }
 
 async function run() {

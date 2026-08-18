@@ -96,6 +96,10 @@
           <span>🎟️</span>
           <span>Sorteos</span>
         </button>
+        <button class="admin-tab-btn" data-tab="users">
+          <span>👥</span>
+          <span>Usuarios</span>
+        </button>
         <button class="admin-tab-btn" data-tab="config">
           <span>⚙️</span>
           <span>Ajustes</span>
@@ -442,6 +446,67 @@
         <h4 style="font-size: 0.95rem; font-weight: 800; margin-top: 14px;">Lista de Participantes Registrados</h4>
         <div id="adminRaffleParticipantsList" style="display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto;">
           <!-- Injected by admin.js -->
+        </div>
+      </div>
+
+      <!-- ================================================================
+           TAB 6: USERS & MARKETING LEADS (CAMPAIGNS)
+           ================================================================ -->
+      <div class="admin-pane admin-card-box" id="pane-users" style="display: none;">
+        <div class="admin-section-header">
+          <div>
+            <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 800;">👥 Base de Usuarios & Campañas de Marketing</h3>
+            <p style="font-size: 0.8rem; color: var(--text-secondary);">Directorio de correos y visitantes registrados en vivo para futuras campañas de email marketing y promociones.</p>
+          </div>
+          <div class="admin-section-actions">
+            <button class="btn-admin-action btn-success" onclick="AdminApp.exportUsersCSV()" title="Exportar archivo CSV listo para importar en Mailchimp, Brevo o Excel">
+              📥 Exportar CSV
+            </button>
+            <button class="btn-admin-action" onclick="AdminApp.copyAllEmails()" title="Copiar todos los correos al portapapeles">
+              📋 Copiar Emails
+            </button>
+            <button class="btn-admin-action" onclick="AdminApp.fetchState()">🔄 Refrescar</button>
+          </div>
+        </div>
+
+        <!-- Metrics Cards Grid -->
+        <div class="admin-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px;">
+          <div style="background: var(--admin-card-inner); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--admin-border-subtle); display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">👥 Total Visitantes</span>
+            <strong style="font-size: 1.6rem; color: var(--text-primary);" id="statUsersTotal">0</strong>
+          </div>
+          <div style="background: var(--admin-card-inner); padding: 14px; border-radius: var(--radius-md); border: 1px solid rgba(66, 133, 244, 0.3); display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-size: 0.75rem; color: #93c5fd; font-weight: 700; text-transform: uppercase;">📧 Emails Google Verificados</span>
+            <strong style="font-size: 1.6rem; color: #60a5fa;" id="statUsersGoogle">0</strong>
+          </div>
+          <div style="background: var(--admin-card-inner); padding: 14px; border-radius: var(--radius-md); border: 1px solid rgba(245, 158, 11, 0.3); display: flex; flex-direction: column; gap: 4px;">
+            <span style="font-size: 0.75rem; color: #fde68a; font-weight: 700; text-transform: uppercase;">🎟️ Con Golden Ticket</span>
+            <strong style="font-size: 1.6rem; color: #fbbf24;" id="statUsersWithTicket">0</strong>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div style="margin-bottom: 14px;">
+          <input type="text" id="adminUserSearchInput" placeholder="🔍 Buscar por nombre o correo electrónico..." oninput="AdminApp.renderUsers()" style="width: 100%; background: var(--bg-primary); border: 1px solid var(--admin-border); color: white; padding: 10px 14px; border-radius: var(--radius-md); font-size: 0.9rem;">
+        </div>
+
+        <!-- Users Table -->
+        <div class="admin-table-container" style="overflow-x: auto;">
+          <table class="admin-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--admin-border-subtle); text-align: left; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">
+                <th style="padding: 10px 8px;">Usuario</th>
+                <th style="padding: 10px 8px;">Correo Electrónico</th>
+                <th style="padding: 10px 8px;">Origen</th>
+                <th style="padding: 10px 8px;">Fecha</th>
+                <th style="padding: 10px 8px;">Ticket / Voto</th>
+                <th style="padding: 10px 8px; text-align: right;">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersTableBody">
+              <!-- Injected by AdminApp JS -->
+            </tbody>
+          </table>
         </div>
       </div>
 

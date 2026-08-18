@@ -672,5 +672,37 @@
       "stand": "Green Garden 100% Plant Based",
       "issuedAt": "13:10"
     }
+  ],
+  "users": [
+    {
+      "id": "usr-1001",
+      "name": "Martín Otero",
+      "email": "martin.oterosj@gmail.com",
+      "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop",
+      "provider": "google",
+      "createdAt": "2026-08-18T12:00:00.000Z",
+      "ticketCode": "GF-8412",
+      "votedStand": "La Fogonera Regenerativa"
+    },
+    {
+      "id": "usr-1002",
+      "name": "Camila Navarro",
+      "email": "camila.navarro@gmail.com",
+      "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop",
+      "provider": "google",
+      "createdAt": "2026-08-18T12:35:00.000Z",
+      "ticketCode": "GF-3904",
+      "votedStand": "Smash Burger Eco Lab"
+    },
+    {
+      "id": "usr-1003",
+      "name": "Gonzalo Benítez",
+      "email": "gonzalo.benitez26@gmail.com",
+      "avatar": "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=120&auto=format&fit=crop",
+      "provider": "google",
+      "createdAt": "2026-08-18T13:05:00.000Z",
+      "ticketCode": "GF-7721",
+      "votedStand": "Green Garden 100% Plant Based"
+    }
   ]
 }

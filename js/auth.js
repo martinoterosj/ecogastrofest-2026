@@ -56,6 +56,12 @@ const Auth = {
     } catch (e) {
       console.warn('Could not persist user session');
     }
+
+    // Registrar lead en base de datos central para campañas de email marketing
+    if (typeof DBAdapter !== 'undefined' && DBAdapter.saveUserLead) {
+      DBAdapter.saveUserLead(user).catch(() => {});
+    }
+
     this.updateUI();
     this.prefillRaffleForm();
   },

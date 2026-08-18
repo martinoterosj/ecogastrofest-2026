@@ -133,5 +133,60 @@ const DBAdapter = {
       body: JSON.stringify(participant)
     });
     return await res.json();
+  },
+
+  async saveUserLead(user) {
+    try {
+      // Guardar también en localStorage para resiliencia offline
+      let localUsers = [];
+      try {
+        const saved = localStorage.getItem('gastrofest_registered_users');
+        if (saved) localUsers = JSON.parse(saved);
+      } catch (e) {}
+
+      const idx = localUsers.findIndex(u => (user.email && u.email === user.email) || (user.id && u.id === user.id));
+      if (idx >= 0) {
+        localUsers[idx] = Object.assign({}, localUsers[idx], user);
+      } else {
+        localUsers.push(user);
+      }
+      localStorage.setItem('gastrofest_registered_users', JSON.stringify(localUsers));
+
+      // Sincronizar con backend si está disponible
+      const res = await fetch('./api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user)
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: true, mode: 'local_cached', user };
+    }
+  },
+
+  async getUsers() {
+    try {
+      const res = await fetch('./api/users');
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {}
+
+    // Fallback a localStorage o GASTRO_DATA
+    try {
+      const saved = localStorage.getItem('gastrofest_registered_users');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+
+    return (window.GASTRO_DATA && window.GASTRO_DATA.users) ? window.GASTRO_DATA.users : [];
+  },
+
+  async deleteUser(userId) {
+    try {
+      const res = await fetch(`./api/users/${userId}`, { method: 'DELETE' });
+      return await res.json();
+    } catch (e) {
+      return { success: true, mode: 'offline' };
+    }
   }
 };

@@ -33,6 +33,8 @@ app.get('/api/sync', (req, res) => {
     standCategories: db.standCategories || [],
     sponsors: db.sponsors || { gold: [], silver: [] },
     participantsCount: db.participants ? db.participants.length : 0,
+    usersCount: db.users ? db.users.length : 0,
+    users: db.users || [],
     timestamp: new Date().toLocaleTimeString()
   });
 });
@@ -305,8 +307,6 @@ app.delete('/api/zones/:id', (req, res) => {
   db.zones = db.zones.filter(z => z.id !== req.params.id);
   saveDB(db);
   res.json({ success: true, message: 'Zona eliminada' });
-});
-
 // =============================================================================
 // 9. CONFIG & EVENT INFO
 // =============================================================================
@@ -315,6 +315,86 @@ app.put('/api/config/event', (req, res) => {
   db.event = Object.assign(db.event || {}, req.body);
   saveDB(db);
   res.json({ success: true, event: db.event });
+});
+
+// =============================================================================
+// 10. USERS & MARKETING LEADS (CAMPAIGNS)
+// =============================================================================
+app.get('/api/users', (req, res) => {
+  res.json(getDB().users || []);
+});
+
+app.post('/api/users', (req, res) => {
+  const db = getDB();
+  if (!db.users) db.users = [];
+  const { id, name, email, avatar, provider, ticketCode, votedStand } = req.body;
+  if (!name) return res.status(400).json({ success: false, message: 'Nombre requerido' });
+
+  let existing = null;
+  if (email) {
+    existing = db.users.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+  }
+  if (!existing && id) {
+    existing = db.users.find(u => u.id === id);
+  }
+
+  if (existing) {
+    existing.name = name || existing.name;
+    if (email) existing.email = email;
+    if (avatar) existing.avatar = avatar;
+    if (provider) existing.provider = provider;
+    if (ticketCode) existing.ticketCode = ticketCode;
+    if (votedStand) existing.votedStand = votedStand;
+    existing.lastSeenAt = new Date().toISOString();
+    saveDB(db);
+    return res.json({ success: true, updated: existing });
+  } else {
+    const newUser = {
+      id: id || `usr-${Date.now()}`,
+      name,
+      email: email || null,
+      avatar: avatar || null,
+      provider: provider || 'guest',
+      createdAt: new Date().toISOString(),
+      ticketCode: ticketCode || null,
+      votedStand: votedStand || null
+    };
+    db.users.push(newUser);
+    saveDB(db);
+    return res.json({ success: true, created: newUser });
+  }
+});
+
+app.delete('/api/users/:id', (req, res) => {
+  const db = getDB();
+  if (!db.users) db.users = [];
+  db.users = db.users.filter(u => u.id !== req.params.id);
+  saveDB(db);
+  res.json({ success: true, message: 'Usuario eliminado' });
+});
+
+// CSV Export for Marketing / Mailchimp
+app.get('/api/users/export/csv', (req, res) => {
+  const db = getDB();
+  const users = db.users || [];
+  
+  let csv = '\uFEFF'; // UTF-8 BOM for Excel
+  csv += 'ID,Nombre,Email,Proveedor,Fecha Registro,Golden Ticket,Stand Votado\n';
+
+  users.forEach(u => {
+    const cleanName = (u.name || '').replace(/"/g, '""');
+    const cleanEmail = (u.email || '').replace(/"/g, '""');
+    const cleanProvider = (u.provider || '').replace(/"/g, '""');
+    const cleanDate = (u.createdAt || '').replace(/"/g, '""');
+    const cleanTicket = (u.ticketCode || 'No').replace(/"/g, '""');
+    const cleanStand = (u.votedStand || '-').replace(/"/g, '""');
+
+    csv += `"${u.id}","${cleanName}","${cleanEmail}","${cleanProvider}","${cleanDate}","${cleanTicket}","${cleanStand}"\n`;
+  });
+
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="leads_gastrofest_2026.csv"');
+  res.send(csv);
 });
 
 app.listen(PORT, () => {
