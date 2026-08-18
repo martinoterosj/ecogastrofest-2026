@@ -469,6 +469,11 @@ const MapZoomController = {
     this.viewport.style.transition = smooth ? 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)' : 'none';
     this.viewport.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.scale})`;
     
+    // Escala inversa para mantener los pines pequeños y evitar solapamientos al hacer zoom
+    const invScale = (1 / this.scale).toFixed(4);
+    this.viewport.style.setProperty('--pin-inv-scale', invScale);
+    this.viewport.style.setProperty('--map-zoom', this.scale.toFixed(2));
+    
     if (this.badge) {
       this.badge.textContent = `${this.scale.toFixed(1)}x`;
     }

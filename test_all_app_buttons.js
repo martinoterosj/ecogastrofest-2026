@@ -180,6 +180,8 @@ async function testVisitorApp() {
 
   MapZoomController.zoomIn();
   assert(MapZoomController.scale > 1, `Acercar zoom incrementa la escala del mapa (${MapZoomController.scale}x)`);
+  const mapViewport = document.getElementById('visitorMapViewport');
+  assert(mapViewport && mapViewport.style.getPropertyValue('--pin-inv-scale') !== '', `Escala inversa (--pin-inv-scale: ${mapViewport.style.getPropertyValue('--pin-inv-scale')}) aplicada para mantener los pines compactos`);
   MapZoomController.resetZoom();
   assert(MapZoomController.scale === 1, `Resetear zoom devuelve el mapa a escala 1.0x`);
 

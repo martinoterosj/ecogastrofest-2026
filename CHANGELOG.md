@@ -17,6 +17,7 @@ Todas las modificaciones, mejoras arquitectónicas, módulos y correcciones del 
 ### Added (Nuevas Funcionalidades)
 - **Controlador de Zoom Interactivo con Pellizco en el Mapa Satelital (`MapZoomController` en `js/app.js` & `css/components.css`)**:
   - **Pinch-to-Zoom Táctil Multitouch**: Soporte nativo para pellizcar con 2 dedos en móviles para acercar y alejar suavemente sobre Plaza Independencia.
+  - **Auto-Escala Inversa de Pines (`--pin-inv-scale`)**: Al hacer zoom, los pines y etiquetas se mantienen compactos y a tamaño físico constante (`1 / scale`), evitando que crezcan o se solapen entre sí y permitiendo distinguir con total precisión sectores densos y cercanos.
   - **Arrastre y Paneo Suave**: Al hacer zoom, permite desplazarse libremente por el predio con 1 dedo manteniendo límites de contención seguros.
   - **Doble Toque Inteligente**: Doble tap para alternar instantáneamente entre zoom ampliado (2.2x) y vista general centrada (1.0x).
   - **Botonera Flotante & Indicador de Escala**: Controles de acceso rápido (`➕ Acercar`, `➖ Alejar`, `🎯 Centrar`) e indicador visual de escala (`1.0x`, `1.5x`, `2.0x`).
