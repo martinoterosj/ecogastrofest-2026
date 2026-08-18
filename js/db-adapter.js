@@ -262,5 +262,59 @@ const DBAdapter = {
       });
       return await res.json();
     }
+  },
+
+  async addZone(zoneData) {
+    if (this.isCloudReady && this.docRef) {
+      const doc = await this.docRef.get();
+      const current = doc.exists ? doc.data().zones || [] : [];
+      const newId = zoneData.id || `zone-${Math.floor(100 + Math.random() * 900)}`;
+      const zoneWithId = { ...zoneData, id: newId };
+      current.push(zoneWithId);
+      await this.docRef.update({ zones: current });
+      return { success: true, zone: zoneWithId };
+    } else {
+      const res = await fetch('./api/zones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(zoneData)
+      });
+      return await res.json();
+    }
+  },
+
+  async updateZone(zoneId, updatedFields) {
+    if (this.isCloudReady && this.docRef) {
+      const doc = await this.docRef.get();
+      if (!doc.exists) return { success: false };
+      const list = doc.data().zones || [];
+      const idx = list.findIndex(z => z.id === zoneId);
+      if (idx > -1) {
+        list[idx] = { ...list[idx], ...updatedFields };
+        await this.docRef.update({ zones: list });
+        return { success: true, zone: list[idx] };
+      }
+      return { success: false };
+    } else {
+      const res = await fetch(`./api/zones/${zoneId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedFields)
+      });
+      return await res.json();
+    }
+  },
+
+  async deleteZone(zoneId) {
+    if (this.isCloudReady && this.docRef) {
+      const doc = await this.docRef.get();
+      if (!doc.exists) return { success: false };
+      const list = (doc.data().zones || []).filter(z => z.id !== zoneId);
+      await this.docRef.update({ zones: list });
+      return { success: true };
+    } else {
+      const res = await fetch(`./api/zones/${zoneId}`, { method: 'DELETE' });
+      return await res.json();
+    }
   }
 };

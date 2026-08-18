@@ -1267,25 +1267,36 @@ const AdminApp = {
     }
 
     try {
-      const url = id ? `./api/zones/${id}` : './api/zones';
-      const method = id ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (res.ok) {
-        const data = await res.json();
+      if (window.DBAdapter && DBAdapter.isCloudReady) {
         if (id) {
+          await DBAdapter.updateZone(id, payload);
           const idx = this.dbState.zones.findIndex(z => z.id === id);
-          if (idx > -1) this.dbState.zones[idx] = data.zone || Object.assign(this.dbState.zones[idx], payload);
+          if (idx > -1) Object.assign(this.dbState.zones[idx], payload);
         } else {
-          this.dbState.zones.push(data.zone || { id: `zone-${Date.now()}`, ...payload });
+          const res = await DBAdapter.addZone(payload);
+          this.dbState.zones.push(res.zone || { id: `zone-${Date.now()}`, ...payload });
         }
       } else {
-        throw new Error('Fallback offline save');
+        const url = id ? `./api/zones/${id}` : './api/zones';
+        const method = id ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (id) {
+            const idx = this.dbState.zones.findIndex(z => z.id === id);
+            if (idx > -1) this.dbState.zones[idx] = data.zone || Object.assign(this.dbState.zones[idx], payload);
+          } else {
+            this.dbState.zones.push(data.zone || { id: `zone-${Date.now()}`, ...payload });
+          }
+        } else {
+          throw new Error('Fallback offline save');
+        }
       }
     } catch (err) {
       if (!this.dbState.zones) this.dbState.zones = [];
@@ -1315,7 +1326,11 @@ const AdminApp = {
     if (!confirm('¿Seguro que deseas eliminar esta zona del mapa?')) return;
 
     try {
-      await fetch(`./api/zones/${id}`, { method: 'DELETE' });
+      if (window.DBAdapter && DBAdapter.isCloudReady) {
+        await DBAdapter.deleteZone(id);
+      } else {
+        await fetch(`./api/zones/${id}`, { method: 'DELETE' });
+      }
     } catch (e) {}
 
     if (this.dbState && this.dbState.zones) {

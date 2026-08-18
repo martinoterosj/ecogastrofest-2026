@@ -31,9 +31,18 @@ const LiveSync = {
       if (res.ok) {
         const data = await res.json();
         this.applyUpdates(data);
+        localStorage.setItem('gastrofest_db', JSON.stringify(data));
+        return;
       }
     } catch (e) {
       // Offline fallback: keep local cached data
+    }
+    const saved = localStorage.getItem('gastrofest_db');
+    if (saved) {
+      try {
+        const localData = JSON.parse(saved);
+        this.applyUpdates(localData);
+      } catch (err) {}
     }
   },
 

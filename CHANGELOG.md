@@ -36,7 +36,12 @@ Todas las modificaciones, mejoras arquitectónicas, módulos y correcciones del 
 - **Suite Automatizada de Pruebas de Interfaz (`test_all_app_buttons.js`)**:
   - Batería de 66 pruebas de integración ejecutadas sobre JSDOM simulando interacción de usuario en 100% de los botones, formularios y modales (PWA cliente y panel de administración).
 
-### Fixed (Correcciones de Robustez Descubiertas por los Agentes)
+### Fixed (Correcciones de Robustez Descubiertas por los Agentes & Operadores)
+- **Persistencia y Renderizado de Zonas en el Mapa (`js/app.js`, `js/sync.js`, `js/db-adapter.js` & `server.js`)**:
+  - Resuelto problema donde las zonas creadas o modificadas (ej: *"ZONA DJ"*) no se renderizaban en la PWA de visitantes si el servidor operaba con fallback offline o antes de la primera sincronización.
+  - Incorporada carga reactiva de `localStorage` en `App.init()` y fallback en `LiveSync.syncWithBackend()`.
+  - Añadidos métodos CRUD dedicados en `DBAdapter` (`addZone`, `updateZone`, `deleteZone`) para sincronización bidireccional en tiempo real con Firebase Firestore.
+  - Integrada oficialmente la **ZONA DJ** (`zone-dj` - *🎧 Espacio DJ & Ambientación Electrónica*) en el cuadrante Noroeste de Plaza Independencia (X: 38%, Y: 24%) con atajo rápido en el panel de administración.
 - **Selección Dinámica de Stands (`js/stands.js` & `js/raffle.js`)**: Corregido acceso a `opt.text` en entornos con propiedades `textContent`, previniendo errores al preseleccionar el stand votado en el formulario de sorteos.
 - **Creación Flexible de Stands en Backend (`server.js`)**: Soporte para IDs personalizados y matrices de platos `menu` completos en el endpoint `POST /api/stands`.
 - **Inicialización de App (`js/app.js`)**: Detección de `document.readyState` para asegurar que `App.init()` se ejecute inmediatamente si el DOM ya ha sido parseado.

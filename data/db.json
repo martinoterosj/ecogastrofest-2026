@@ -172,6 +172,17 @@
       "x": 48,
       "y": 32,
       "description": "Catas de vinos Tannat, maridaje de quesos y talleres gastronómicos."
+    },
+    {
+      "id": "zone-dj",
+      "code": "ZONA DJ",
+      "name": "🎧 Espacio DJ & Ambientación Electrónica",
+      "category": "Música & Escenario",
+      "icon": "🎧",
+      "color": "#a855f7",
+      "x": 38,
+      "y": 24,
+      "description": "Cabina de DJs en vivo, mezclas de música orgánica, cumbia digital y ambientación festiva (Noroeste)."
     }
   ],
   "sponsors": {
@@ -296,6 +307,15 @@
       "title": "Aviso Meteorológico",
       "message": "Talleres infantiles trasladados al Domo Tech con calefacción solar.",
       "createdAt": "11:10 a. m.",
+      "active": true
+    },
+    {
+      "id": "ann-9687",
+      "type": "alert",
+      "icon": "🌧️",
+      "title": "Aviso Meteorológico",
+      "message": "Talleres infantiles trasladados al Domo Tech con calefacción solar.",
+      "createdAt": "11:49 a. m.",
       "active": true
     }
   ],
@@ -1311,6 +1331,76 @@
       "phone": "099-000-010",
       "stand": "Patio Cervecero",
       "issuedAt": "11:10 a. m."
+    },
+    {
+      "code": "GF-3325",
+      "name": "Visitante Concurrente 1",
+      "phone": "099-000-01",
+      "stand": "Patio Cervecero",
+      "issuedAt": "11:49 a. m."
+    },
+    {
+      "code": "GF-6150",
+      "name": "Visitante Concurrente 2",
+      "phone": "099-000-02",
+      "stand": "Patio Cervecero",
+      "issuedAt": "11:49 a. m."
+    },
+    {
+      "code": "GF-6954",
+      "name": "Visitante Concurrente 3",
+      "phone": "099-000-03",
+      "stand": "Patio Cervecero",
+      "issuedAt": "11:49 a. m."
+    },
+    {
+      "code": "GF-5141",
+      "name": "Visitante Concurrente 4",
+      "phone": "099-000-04",
+      "stand": "Patio Cervecero",
+      "issuedAt": "11:49 a. m."
+    },
+    {
+      "code": "GF-3125",
+      "name": "Visitante Concurrente 5",
+      "phone": "099-000-05",
+      "stand": "Patio Cervecero",
+      "issuedAt": "11:49 a. m."
+    },
+    {
+      "code": "GF-7491",
+      "name": "Visitante Concurrente 6",
+      "phone": "099-000-06",
+      "stand": "Patio Cervecero",
+      "issuedAt": "11:49 a. m."
+    },
+    {
+      "code": "GF-5270",
+      "name": "Visitante Concurrente 7",
+      "phone": "099-000-07",
+      "stand": "Patio Cervecero",
+      "issuedAt": "11:49 a. m."
+    },
+    {
+      "code": "GF-9251",
+      "name": "Visitante Concurrente 8",
+      "phone": "099-000-08",
+      "stand": "Patio Cervecero",
+      "issuedAt": "11:49 a. m."
+    },
+    {
+      "code": "GF-1185",
+      "name": "Visitante Concurrente 9",
+      "phone": "099-000-09",
+      "stand": "Patio Cervecero",
+      "issuedAt": "11:49 a. m."
+    },
+    {
+      "code": "GF-6455",
+      "name": "Visitante Concurrente 10",
+      "phone": "099-000-010",
+      "stand": "Patio Cervecero",
+      "issuedAt": "11:49 a. m."
     }
   ]
 }

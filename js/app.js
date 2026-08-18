@@ -8,6 +8,24 @@ const App = {
   audioCtx: null,
 
   init() {
+    // 0. Cargar estado persistido si existe en el dispositivo
+    try {
+      const saved = localStorage.getItem('gastrofest_db');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && window.GASTRO_DATA) {
+          if (parsed.event) GASTRO_DATA.event = parsed.event;
+          if (parsed.zones) GASTRO_DATA.zones = parsed.zones;
+          if (parsed.stages) GASTRO_DATA.stages = parsed.stages;
+          if (parsed.standCategories) GASTRO_DATA.standCategories = parsed.standCategories;
+          if (parsed.showCategories) GASTRO_DATA.showCategories = parsed.showCategories;
+          if (parsed.sponsors) GASTRO_DATA.sponsors = parsed.sponsors;
+          if (parsed.schedule) GASTRO_DATA.schedule = parsed.schedule;
+          if (parsed.stands) GASTRO_DATA.stands = parsed.stands;
+        }
+      }
+    } catch (e) {}
+
     this.setupTabNavigation();
     this.renderDynamicEventInfo();
     this.renderSponsors();

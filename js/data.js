@@ -121,6 +121,17 @@ const GASTRO_DATA = {
       x: 48,
       y: 32,
       description: "Catas de vinos Tannat, maridaje de quesos y talleres gastronómicos."
+    },
+    {
+      id: "zone-dj",
+      code: "ZONA DJ",
+      name: "🎧 Espacio DJ & Ambientación Electrónica",
+      category: "Música & Escenario",
+      icon: "🎧",
+      color: "#a855f7",
+      x: 38,
+      y: 24,
+      description: "Cabina de DJs en vivo, mezclas de música orgánica, cumbia digital y ambientación festiva (Noroeste)."
     }
   ],
 
