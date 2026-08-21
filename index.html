@@ -623,6 +623,9 @@
       if (typeof FB !== 'undefined' && FB.AppEvents) {
         FB.AppEvents.logPageView();
       }
+      if (typeof Auth !== 'undefined' && !Auth.currentUser) {
+        Auth.checkFacebookLoginStatus();
+      }
     };
   </script>
   <script async defer crossorigin="anonymous" src="https://connect.facebook.net/es_LA/sdk.js"></script>

@@ -257,6 +257,11 @@ const Auth = {
             version    : 'v20.0'
           });
           console.log('📘 Facebook JavaScript SDK inicializado.');
+          
+          // Comprobar automáticamente el estado de la sesión si no hay usuario activo
+          if (!this.currentUser) {
+            this.checkFacebookLoginStatus();
+          }
         } catch (e) {
           console.log('ℹ️ Facebook SDK listo en modo interactivo');
         }
@@ -277,6 +282,25 @@ const Auth = {
       } else if (document.head) {
         document.head.appendChild(js);
       }
+    }
+  },
+
+  checkFacebookLoginStatus() {
+    if (typeof window === 'undefined' || typeof window.FB === 'undefined' || typeof window.FB.getLoginStatus !== 'function') return;
+
+    try {
+      window.FB.getLoginStatus((response) => {
+        if (response && response.status === 'connected') {
+          window.FB.api('/me', { fields: 'id,name,email,picture.width(250).height(250)' }, (profile) => {
+            if (profile && !profile.error) {
+              console.log('⚡ Sesión activa de Facebook detectada automáticamente');
+              this.handleFacebookProfile(profile);
+            }
+          });
+        }
+      });
+    } catch (e) {
+      console.warn('Error comprobando estado de Facebook login:', e);
     }
   },
 
