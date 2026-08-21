@@ -9,7 +9,7 @@ const Auth = {
   clientIdKey: 'gastrofest_google_client_id',
   defaultClientId: '280286596600-sl30fvgves4pbh9m667fuf1j6o71rtku.apps.googleusercontent.com',
   fbAppIdKey: 'gastrofest_facebook_app_id',
-  defaultFbAppId: '4575744502711008',
+  defaultFbAppId: '1686352569106903',
   currentUser: null,
 
   init() {
