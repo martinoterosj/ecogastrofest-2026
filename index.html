@@ -612,6 +612,19 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <!-- Facebook JavaScript Official SDK -->
+  <script>
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId      : '1686352569106903',
+        cookie     : true,
+        xfbml      : true,
+        version    : 'v20.0'
+      });
+      if (typeof FB !== 'undefined' && FB.AppEvents) {
+        FB.AppEvents.logPageView();
+      }
+    };
+  </script>
   <script async defer crossorigin="anonymous" src="https://connect.facebook.net/es_LA/sdk.js"></script>
 
   <!-- Application Logic Modules -->
