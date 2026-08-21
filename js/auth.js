@@ -285,22 +285,34 @@ const Auth = {
     }
   },
 
-  checkFacebookLoginStatus() {
+  checkFacebookLoginStatus(callback = null) {
     if (typeof window === 'undefined' || typeof window.FB === 'undefined' || typeof window.FB.getLoginStatus !== 'function') return;
 
     try {
       window.FB.getLoginStatus((response) => {
-        if (response && response.status === 'connected') {
-          window.FB.api('/me', { fields: 'id,name,email,picture.width(250).height(250)' }, (profile) => {
-            if (profile && !profile.error) {
-              console.log('⚡ Sesión activa de Facebook detectada automáticamente');
-              this.handleFacebookProfile(profile);
-            }
-          });
+        if (typeof callback === 'function') {
+          callback(response);
+        } else {
+          this.statusChangeCallback(response);
         }
       });
     } catch (e) {
       console.warn('Error comprobando estado de Facebook login:', e);
+    }
+  },
+
+  statusChangeCallback(response) {
+    if (response && response.status === 'connected') {
+      window.FB.api('/me', { fields: 'id,name,email,picture.width(250).height(250)' }, (profile) => {
+        if (profile && !profile.error) {
+          console.log('⚡ Sesión de Facebook conectada y procesada');
+          this.handleFacebookProfile(profile);
+        }
+      });
+    } else if (response && response.status === 'not_authorized') {
+      console.log('ℹ️ Usuario conectado en Facebook pero no en la app');
+    } else {
+      console.log('ℹ️ Usuario no conectado en Facebook');
     }
   },
 
@@ -662,6 +674,12 @@ const Auth = {
 
 if (typeof window !== 'undefined') {
   window.Auth = Auth;
+  window.checkLoginState = function() {
+    Auth.checkFacebookLoginStatus();
+  };
+  window.statusChangeCallback = function(response) {
+    Auth.statusChangeCallback(response);
+  };
 }
 
 if (typeof module !== 'undefined' && module.exports) {
