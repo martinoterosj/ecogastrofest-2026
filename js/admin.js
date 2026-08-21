@@ -1770,7 +1770,7 @@ const AdminApp = {
     const ticketEl = document.getElementById('statUsersWithTicket');
 
     if (totalEl) totalEl.textContent = users.length;
-    if (googleEl) googleEl.textContent = users.filter(u => u.provider === 'google').length;
+    if (googleEl) googleEl.textContent = users.filter(u => u.provider === 'google' || u.provider === 'facebook' || (u.email && u.email.includes('@'))).length;
     if (ticketEl) ticketEl.textContent = users.filter(u => Boolean(u.ticketCode)).length;
 
     // Filter by search query
@@ -1781,7 +1781,8 @@ const AdminApp = {
       ? users.filter(u => 
           (u.name && u.name.toLowerCase().includes(query)) ||
           (u.email && u.email.toLowerCase().includes(query)) ||
-          (u.ticketCode && u.ticketCode.toLowerCase().includes(query))
+          (u.ticketCode && u.ticketCode.toLowerCase().includes(query)) ||
+          (u.provider && u.provider.toLowerCase().includes(query))
         )
       : users;
 
@@ -1801,8 +1802,16 @@ const AdminApp = {
 
     tbody.innerHTML = filteredUsers.map(u => {
       const isGoogle = u.provider === 'google';
+      const isFacebook = u.provider === 'facebook';
       const formattedDate = u.createdAt ? new Date(u.createdAt).toLocaleDateString('es-UY', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Hoy';
       const initials = u.name ? u.name.substring(0, 2).toUpperCase() : 'US';
+
+      let providerBadge = '<span style="font-size: 0.72rem; padding: 2px 8px; border-radius: var(--radius-full); font-weight: 700; background: rgba(245, 158, 11, 0.18); color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.4);">👤 Invitado</span>';
+      if (isGoogle) {
+        providerBadge = '<span style="font-size: 0.72rem; padding: 2px 8px; border-radius: var(--radius-full); font-weight: 700; background: rgba(66, 133, 244, 0.18); color: #93c5fd; border: 1px solid rgba(66, 133, 244, 0.4);">🔵 Google</span>';
+      } else if (isFacebook) {
+        providerBadge = '<span style="font-size: 0.72rem; padding: 2px 8px; border-radius: var(--radius-full); font-weight: 700; background: rgba(24, 119, 242, 0.18); color: #93c5fd; border: 1px solid rgba(24, 119, 242, 0.4);">🟦 Facebook</span>';
+      }
 
       return `
         <tr style="border-bottom: 1px solid var(--admin-border-subtle);">
@@ -1816,9 +1825,7 @@ const AdminApp = {
             ${u.email ? `<a href="mailto:${u.email}" style="color: #60a5fa; text-decoration: none; font-size: 0.85rem;">${u.email}</a>` : '<span style="color: var(--text-muted); font-size: 0.8rem;">Sin email</span>'}
           </td>
           <td style="padding: 10px 8px;">
-            <span style="font-size: 0.72rem; padding: 2px 8px; border-radius: var(--radius-full); font-weight: 700; ${isGoogle ? 'background: rgba(66, 133, 244, 0.18); color: #93c5fd; border: 1px solid rgba(66, 133, 244, 0.4);' : 'background: rgba(245, 158, 11, 0.18); color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.4);'}">
-              ${isGoogle ? '🔵 Google' : '👤 Invitado'}
-            </span>
+            ${providerBadge}
           </td>
           <td style="padding: 10px 8px; font-size: 0.8rem; color: var(--text-secondary);">
             ${formattedDate}

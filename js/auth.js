@@ -1,6 +1,6 @@
 /**
  * ECOGASTROFEST 2026 - AUTHENTICATION & USER SESSION MODULE
- * Soporta Google Identity Services (GIS) oficial con ID Token (JWT),
+ * Soporta Google Identity Services (GIS) oficial, Facebook Login (Meta SDK),
  * Modo Invitado instantáneo, Gestión de Perfil y Auto-Completado de Sorteos
  */
 
@@ -8,12 +8,15 @@ const Auth = {
   sessionKey: 'gastrofest_user_session',
   clientIdKey: 'gastrofest_google_client_id',
   defaultClientId: '280286596600-sl30fvgves4pbh9m667fuf1j6o71rtku.apps.googleusercontent.com',
+  fbAppIdKey: 'gastrofest_facebook_app_id',
+  defaultFbAppId: '4575744502711008',
   currentUser: null,
 
   init() {
     this.loadSession();
     this.setupUIEvents();
     this.setupGoogleGIS();
+    this.setupFacebookSDK();
     
     // Si no hay sesión activa, desplegar modal de bienvenida
     if (!this.currentUser) {
@@ -33,6 +36,18 @@ const Auth = {
       localStorage.setItem(this.clientIdKey, clientId.trim());
       this.setupGoogleGIS();
       this.showToast('✅ Google Client ID configurado exitosamente.');
+    }
+  },
+
+  getFacebookAppId() {
+    return localStorage.getItem(this.fbAppIdKey) || this.defaultFbAppId;
+  },
+
+  setFacebookAppId(appId) {
+    if (appId && appId.trim()) {
+      localStorage.setItem(this.fbAppIdKey, appId.trim());
+      this.setupFacebookSDK();
+      this.showToast('✅ Facebook App ID configurado exitosamente.');
     }
   },
 
@@ -81,6 +96,12 @@ const Auth = {
       btnGoogle.addEventListener('click', () => this.loginWithGoogle());
     }
 
+    // Botón de Facebook en modal de bienvenida
+    const btnFacebook = document.getElementById('btnAuthFacebook');
+    if (btnFacebook) {
+      btnFacebook.addEventListener('click', () => this.loginWithFacebook());
+    }
+
     // Botón de Invitado en modal de bienvenida
     const btnGuest = document.getElementById('btnAuthGuest');
     if (btnGuest) {
@@ -111,6 +132,15 @@ const Auth = {
       btnLinkGoogle.addEventListener('click', () => {
         this.closeProfileDrawer();
         this.loginWithGoogle();
+      });
+    }
+
+    // Vincular Facebook desde Drawer (Modo Invitado)
+    const btnLinkFacebook = document.getElementById('btnLinkFacebookInDrawer');
+    if (btnLinkFacebook) {
+      btnLinkFacebook.addEventListener('click', () => {
+        this.closeProfileDrawer();
+        this.loginWithFacebook();
       });
     }
   },
@@ -180,6 +210,7 @@ const Auth = {
         email: payload.email || '',
         avatar: payload.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(payload.name || 'User')}&background=10b981&color=fff&size=128&bold=true`,
         type: 'google',
+        provider: 'google',
         createdAt: new Date().toISOString()
       };
 
@@ -209,6 +240,80 @@ const Auth = {
   },
 
   // --------------------------------------------------------------------------
+  // FACEBOOK JAVASCRIPT SDK INTEGRATION
+  // --------------------------------------------------------------------------
+  setupFacebookSDK() {
+    if (typeof window === 'undefined') return;
+
+    const appId = this.getFacebookAppId();
+
+    window.fbAsyncInit = () => {
+      if (typeof window.FB !== 'undefined') {
+        try {
+          window.FB.init({
+            appId      : appId,
+            cookie     : true,
+            xfbml      : true,
+            version    : 'v20.0'
+          });
+          console.log('📘 Facebook JavaScript SDK inicializado.');
+        } catch (e) {
+          console.log('ℹ️ Facebook SDK listo en modo interactivo');
+        }
+      }
+    };
+
+    // Inyectar SDK oficial de Facebook si no está presente en el DOM
+    if (typeof document !== 'undefined' && !document.getElementById('facebook-jssdk')) {
+      const js = document.createElement('script');
+      js.id = 'facebook-jssdk';
+      js.src = 'https://connect.facebook.net/es_LA/sdk.js';
+      js.async = true;
+      js.defer = true;
+      js.crossOrigin = 'anonymous';
+      const firstScript = document.getElementsByTagName('script')[0];
+      if (firstScript && firstScript.parentNode) {
+        firstScript.parentNode.insertBefore(js, firstScript);
+      } else if (document.head) {
+        document.head.appendChild(js);
+      }
+    }
+  },
+
+  handleFacebookProfile(profile) {
+    if (!profile) return;
+
+    let avatarUrl = null;
+    if (profile.picture) {
+      if (typeof profile.picture === 'string') {
+        avatarUrl = profile.picture;
+      } else if (profile.picture.data && profile.picture.data.url) {
+        avatarUrl = profile.picture.data.url;
+      }
+    }
+    if (!avatarUrl && profile.id) {
+      avatarUrl = `https://graph.facebook.com/${profile.id}/picture?type=large`;
+    }
+    if (!avatarUrl) {
+      avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name || 'User')}&background=1877F2&color=fff&size=128&bold=true`;
+    }
+
+    const user = {
+      id: `facebook-${profile.id || Date.now()}`,
+      name: profile.name || 'Usuario Facebook',
+      email: profile.email || '',
+      avatar: avatarUrl,
+      type: 'facebook',
+      provider: 'facebook',
+      createdAt: new Date().toISOString()
+    };
+
+    this.saveSession(user);
+    this.closeWelcomeModal();
+    this.showToast(`🌿 ¡Bienvenido/a, ${user.name.split(' ')[0]}! Conectado con Facebook.`);
+  },
+
+  // --------------------------------------------------------------------------
   // AUTH ACTIONS
   // --------------------------------------------------------------------------
   loginWithGoogle(customProfile = null) {
@@ -219,6 +324,7 @@ const Auth = {
         email: customProfile.email || 'usuario@gmail.com',
         avatar: customProfile.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(customProfile.name || 'User')}&background=10b981&color=fff&size=128&bold=true`,
         type: 'google',
+        provider: 'google',
         createdAt: new Date().toISOString()
       };
       this.saveSession(user);
@@ -228,7 +334,7 @@ const Auth = {
     }
 
     // Intentar abrir el selector nativo de Google GIS
-    if (window.google && window.google.accounts && window.google.accounts.id) {
+    if (typeof window !== 'undefined' && window.google && window.google.accounts && window.google.accounts.id) {
       try {
         window.google.accounts.id.prompt((notification) => {
           if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
@@ -256,12 +362,66 @@ const Auth = {
       email: userRealEmail.trim(),
       avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(userRealName.trim())}&background=10b981&color=fff&size=128&bold=true`,
       type: 'google',
+      provider: 'google',
       createdAt: new Date().toISOString()
     };
 
     this.saveSession(user);
     this.closeWelcomeModal();
     this.showToast(`🌿 ¡Bienvenido/a, ${user.name.split(' ')[0]}! Has iniciado sesión con Google.`);
+  },
+
+  loginWithFacebook(customProfile = null) {
+    if (customProfile) {
+      this.handleFacebookProfile(customProfile);
+      return;
+    }
+
+    // Intentar abrir el diálogo oficial de Facebook Login
+    if (typeof window !== 'undefined' && typeof window.FB !== 'undefined') {
+      try {
+        window.FB.login((response) => {
+          if (response && response.authResponse) {
+            window.FB.api('/me', { fields: 'id,name,email,picture.width(250).height(250)' }, (profile) => {
+              if (profile && !profile.error) {
+                this.handleFacebookProfile(profile);
+              } else {
+                this.promptCustomFacebookLogin();
+              }
+            });
+          } else {
+            console.log('Login de Facebook cancelado o no autorizado');
+          }
+        }, { scope: 'public_profile,email' });
+        return;
+      } catch (err) {
+        console.warn('FB.login exception:', err);
+      }
+    }
+
+    // Fallback interactivo si no está activo FB SDK en localhost/offline
+    this.promptCustomFacebookLogin();
+  },
+
+  promptCustomFacebookLogin() {
+    const userRealName = prompt('🟦 Iniciar Sesión con Facebook\n\nIngresa tu Nombre Completo (como figura en tu perfil de Facebook):', 'Martín Otero');
+    if (!userRealName || !userRealName.trim()) return;
+
+    const userRealEmail = prompt('Ingresa tu Correo Electrónico vinculado a Facebook:', `${userRealName.toLowerCase().replace(/\s+/g, '.')}@facebook.com`);
+
+    const user = {
+      id: `facebook-${Date.now()}`,
+      name: userRealName.trim(),
+      email: userRealEmail ? userRealEmail.trim() : '',
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(userRealName.trim())}&background=1877F2&color=fff&size=128&bold=true`,
+      type: 'facebook',
+      provider: 'facebook',
+      createdAt: new Date().toISOString()
+    };
+
+    this.saveSession(user);
+    this.closeWelcomeModal();
+    this.showToast(`🌿 ¡Bienvenido/a, ${user.name.split(' ')[0]}! Has iniciado sesión con Facebook.`);
   },
 
   loginAsGuest(customName = null) {
@@ -272,6 +432,7 @@ const Auth = {
       email: null,
       avatar: null,
       type: 'guest',
+      provider: 'guest',
       createdAt: new Date().toISOString()
     };
 
@@ -318,6 +479,7 @@ const Auth = {
     const typeBadge = document.getElementById('drawerUserTypeBadge');
     const avatarEl = document.getElementById('drawerUserAvatar');
     const linkGoogleRow = document.getElementById('drawerLinkGoogleRow');
+    const linkFacebookRow = document.getElementById('drawerLinkFacebookRow');
     const ticketSummary = document.getElementById('drawerTicketSummary');
 
     if (nameEl) nameEl.textContent = this.currentUser.name;
@@ -329,6 +491,8 @@ const Auth = {
     if (typeBadge) {
       if (this.currentUser.type === 'google') {
         typeBadge.innerHTML = '🟢 <span style="color:#34d399;">Cuenta Google Verificada</span>';
+      } else if (this.currentUser.type === 'facebook') {
+        typeBadge.innerHTML = '🟦 <span style="color:#60a5fa;">Cuenta Facebook Verificada</span>';
       } else {
         typeBadge.innerHTML = '👤 <span style="color:#f59e0b;">Modo Invitado</span>';
       }
@@ -343,8 +507,12 @@ const Auth = {
       }
     }
 
+    const isGuest = this.currentUser.type === 'guest';
     if (linkGoogleRow) {
-      linkGoogleRow.style.display = this.currentUser.type === 'guest' ? 'block' : 'none';
+      linkGoogleRow.style.display = isGuest ? 'block' : 'none';
+    }
+    if (linkFacebookRow) {
+      linkFacebookRow.style.display = isGuest ? 'block' : 'none';
     }
 
     // Check if user already has a Golden Ticket
@@ -410,18 +578,21 @@ const Auth = {
         }
       }
       
+      chip.classList.remove('is-google', 'is-facebook');
       if (this.currentUser.type === 'google') {
         chip.classList.add('is-google');
         chip.title = `Conectado como ${this.currentUser.name} (Google)`;
+      } else if (this.currentUser.type === 'facebook') {
+        chip.classList.add('is-facebook');
+        chip.title = `Conectado como ${this.currentUser.name} (Facebook)`;
       } else {
-        chip.classList.remove('is-google');
         chip.title = `Modo Invitado (${this.currentUser.name})`;
       }
     } else {
       chip.style.display = 'flex';
       if (chipName) chipName.textContent = 'Ingresar';
       if (chipAvatar) chipAvatar.innerHTML = `<span>👤</span>`;
-      chip.classList.remove('is-google');
+      chip.classList.remove('is-google', 'is-facebook');
       chip.title = 'Iniciar sesión o entrar como invitado';
     }
   },
@@ -431,7 +602,7 @@ const Auth = {
 
     const nameInput = document.getElementById('raffleName') || document.getElementById('raffleNameInput');
     if (nameInput && !nameInput.value) {
-      if (this.currentUser.type === 'google' || !this.currentUser.name.startsWith('Invitado #')) {
+      if (this.currentUser.type === 'google' || this.currentUser.type === 'facebook' || !this.currentUser.name.startsWith('Invitado #')) {
         nameInput.value = this.currentUser.name;
       }
     }

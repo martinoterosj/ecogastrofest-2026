@@ -253,9 +253,9 @@ async function runAgentCamila() {
   const GASTRO_DATA = window.eval('GASTRO_DATA');
   const Auth = window.eval('Auth');
 
-  // 0. Login con Google y verificación de pre-fill automático
-  Auth.loginWithGoogle({ name: 'Camila Navarro', email: 'camila.navarro@gmail.com' });
-  assert('Camila', Auth.currentUser && Auth.currentUser.name === 'Camila Navarro', 'Inicia sesión con Google para agilizar su participación');
+  // 0. Login con Facebook y verificación de pre-fill automático
+  Auth.loginWithFacebook({ id: '1099887766', name: 'Camila Navarro', email: 'camila.navarro@facebook.com' });
+  assert('Camila', Auth.currentUser && Auth.currentUser.type === 'facebook' && Auth.currentUser.provider === 'facebook', 'Inicia sesión con Facebook para agilizar su participación');
   assert('Camila', document.getElementById('raffleName').value === 'Camila Navarro', 'Formulario de sorteo pre-completa automáticamente el nombre del titular');
 
   App.switchTab('sorteo');

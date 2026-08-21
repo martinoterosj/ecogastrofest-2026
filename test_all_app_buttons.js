@@ -207,17 +207,37 @@ async function testVisitorApp() {
   assert(Auth.currentUser !== null && Auth.currentUser.type === 'google', 'Botón Google inicia sesión con cuenta Google verificada');
   assert(document.getElementById('userProfileChip').classList.contains('is-google'), 'Chip de perfil refleja estilo de cuenta Google');
 
+  // Test Facebook login
+  Auth.clearSession();
+  Auth.openWelcomeModal();
+  const btnFacebook = document.getElementById('btnAuthFacebook');
+  assert(btnFacebook !== null, 'Botón Facebook #btnAuthFacebook presente en modal de bienvenida');
+  btnFacebook.click();
+  assert(Auth.currentUser !== null && Auth.currentUser.type === 'facebook', 'Botón Facebook inicia sesión con cuenta Facebook');
+  assert(document.getElementById('userProfileChip').classList.contains('is-facebook'), 'Chip de perfil refleja estilo .is-facebook');
+
   // Test opening Profile Drawer
   const profileChip = document.getElementById('userProfileChip');
   profileChip.click();
   assert(document.getElementById('userProfileDrawer').classList.contains('active'), 'Click en Chip de Perfil abre el drawer #userProfileDrawer');
   assert(document.getElementById('drawerUserName').textContent === Auth.currentUser.name, 'Drawer muestra el nombre del usuario conectado');
+  assert(document.getElementById('drawerUserTypeBadge').textContent.includes('Facebook'), 'Drawer muestra distintivo de cuenta Facebook');
 
   // Test Logout
   const btnLogout = document.getElementById('btnLogoutAction');
   btnLogout.click();
   assert(Auth.currentUser === null, 'Botón Cerrar Sesión elimina la sesión activa');
   assert(document.getElementById('authWelcomeModal').classList.contains('active'), 'Cerrar sesión reabre el modal de bienvenida');
+
+  // Test Linking Facebook from Guest Mode
+  btnGuest.click();
+  profileChip.click();
+  const linkFbRow = document.getElementById('drawerLinkFacebookRow');
+  assert(linkFbRow && linkFbRow.style.display !== 'none', 'Drawer muestra botón de vincular Facebook en modo invitado');
+  const btnLinkFb = document.getElementById('btnLinkFacebookInDrawer');
+  btnLinkFb.click();
+  assert(Auth.currentUser !== null && Auth.currentUser.type === 'facebook', 'Vincular Facebook desde el drawer actualiza la sesión');
+  btnLogout.click();
 }
 
 async function testAdminApp() {

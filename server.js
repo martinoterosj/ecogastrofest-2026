@@ -307,6 +307,8 @@ app.delete('/api/zones/:id', (req, res) => {
   db.zones = db.zones.filter(z => z.id !== req.params.id);
   saveDB(db);
   res.json({ success: true, message: 'Zona eliminada' });
+});
+
 // =============================================================================
 // 9. CONFIG & EVENT INFO
 // =============================================================================

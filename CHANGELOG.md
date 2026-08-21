@@ -6,11 +6,28 @@ Todas las modificaciones, mejoras arquitectónicas, módulos y correcciones del 
 
 ## [Unreleased]
 ### Planificado / Próximas Mejoras
-- [ ] **Pasarela de Pagos Digitales**: Integración con Mercado Pago / POS Web para pre-compra de eco-vasos y tickets gastronómicos.
-- [ ] **Módulo de Analíticas en Vivo**: Dashboard con gráficos en tiempo real sobre afluencia por zonas, platos más vendidos y velocidad de rotación.
 - [ ] **Notificaciones Web Push**: Alertas automáticas al dispositivo cuando un show marcado como favorito esté a 10 minutos de comenzar.
 
 ---
+
+## [1.8.0] - 2026-08-21
+
+### Added (Nuevas Funcionalidades)
+- **Integración Nativa de Inicio de Sesión con Facebook (`Facebook Login` en `js/auth.js` & `index.html`)**:
+  - **Meta / Facebook JavaScript SDK (`v20.0`)**: Inicialización asíncrona mediante `FB.init` y consulta directa a Graph API (`/me?fields=id,name,email,picture`).
+  - **Botón Oficial de Facebook en Modal de Bienvenida (`.btn-auth-facebook`)**: Botón estilizado en azul oficial (`#1877f2`) con logotipo SVG oficial, micro-interacciones hover y compatibilidad responsive para smartphones pequeños (<380px).
+  - **Vinculación de Facebook desde Modo Invitado (`#btnLinkFacebookInDrawer`)**: Permite a cualquier usuario que comenzó como invitado asociar su cuenta de Facebook sin perder su progreso ni sus votos en el festival.
+  - **Distintivo Visual & Chip de Perfil (`.is-facebook`)**: Chip de perfil con borde azul neón y badge de verificación `🟦 Cuenta Facebook Verificada` en el drawer inferior.
+  - **Auto-Completado de Sorteos**: El titular y correo se precargan automáticamente en el formulario del Golden Ticket para usuarios de Facebook.
+  - **Directorio de Leads & Exportación CSV (`js/admin.js` & `admin.html`)**: Reconocimiento de proveedor `facebook` en la base de marketing, badge dedicado `🟦 Facebook` en la tabla de operadores y métricas unificadas.
+  - **Resiliencia y Modo Interactivo Offline**: Detección inteligente con modal fallback para pruebas locales sin conexión o sin credenciales de producción.
+
+### Fixed
+- **Cierre de Endpoint en Servidor Backend (`server.js`)**: Corregido cierre de llave en la ruta `DELETE /api/zones/:id`, asegurando ejecución sin errores de `server.js` y el paso exitoso de la suite multi-agente en Node.js.
+
+### Changed (Mejoras en Suites de Pruebas)
+- **Expansión de la Suite de Botones & UI (`test_all_app_buttons.js`)**: Batería ampliada a **95 pruebas** (+6 aserciones dedicadas al botón de Facebook, login, clase `.is-facebook`, drawer y vinculación desde invitado).
+- **Expansión de la Simulación Multi-Agente (`test_multiagent_simulation.js`)**: Agente 3 (Camila) adaptada para validar el flujo completo de autenticación vía Facebook y emisión de tickets. Total general del proyecto: **140 pruebas automatizadas al 100%**.
 
 ## [1.7.0] - 2026-08-18
 

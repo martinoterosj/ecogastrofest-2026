@@ -1,9 +1,9 @@
 # 🌿 EcoGastroFest 2026 - Documento Maestro de Contexto y Arquitectura
 
 > **Fuente Única de Verdad (Single Source of Truth - SSOT)**  
-> **Versión del Proyecto:** 1.7.0  
+> **Versión del Proyecto:** 1.8.0  
 > **Ubicación:** `c:\Users\Martin\.gemini\antigravity-ide\scratch\gastrofest-app`  
-> **Última Actualización:** 18 de Agosto de 2026
+> **Última Actualización:** 21 de Agosto de 2026
 
 ---
 
@@ -12,7 +12,7 @@
 **EcoGastroFest 2026** es una plataforma digital Progressive Web App (PWA) de alto rendimiento desarrollada para la *Feria Gastronómica Sustentable de San José de Mayo, Uruguay* (Plaza Independencia). 
 
 La plataforma cubre dos frentes de manera coordinada y en tiempo real:
-1. **📱 App Visitantes (PWA Mobile-First / Desktop)**: Experiencia para los asistentes con bienvenida y autenticación (Google / Invitado), catálogo de puestos, filtros dietarios (Vegano, Celíaco), agenda con favoritos, radar de espectáculos en vivo, simulador de horarios, plano satelital interactivo, trivias sustentables y tickets dorados para sorteos con código QR interactivo.
+1. **📱 App Visitantes (PWA Mobile-First / Desktop)**: Experiencia para los asistentes con bienvenida y autenticación multicanal (Google / Facebook / Invitado), catálogo de puestos, filtros dietarios (Vegano, Celíaco), agenda con favoritos, radar de espectáculos en vivo, simulador de horarios, plano satelital interactivo con pinch-to-zoom, trivias sustentables y tickets dorados para sorteos con código QR interactivo.
 2. **🛠️ Panel de Operadores (Admin Dashboard)**: Interfaz de gestión rápida con acceso por PIN para organizadores, que permite CRUD de stands, control de stock y plato agotado (`Sold Out`) en caliente, programación de shows, emisión de anuncios urgentes, ruleta en vivo de sorteos, edición de coordenadas del mapa y gestión dinámica de categorías/sponsors.
 
 ---
