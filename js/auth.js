@@ -377,29 +377,43 @@ const Auth = {
       return;
     }
 
-    // Intentar abrir el diálogo oficial de Facebook Login
-    if (typeof window !== 'undefined' && typeof window.FB !== 'undefined') {
-      try {
-        window.FB.login((response) => {
-          if (response && response.authResponse) {
-            window.FB.api('/me', { fields: 'id,name,email,picture.width(250).height(250)' }, (profile) => {
-              if (profile && !profile.error) {
-                this.handleFacebookProfile(profile);
-              } else {
-                this.promptCustomFacebookLogin();
-              }
-            });
-          } else {
-            console.log('Login de Facebook cancelado o no autorizado');
-          }
-        }, { scope: 'public_profile,email' });
-        return;
-      } catch (err) {
-        console.warn('FB.login exception:', err);
+    const executeFbLogin = () => {
+      if (typeof window !== 'undefined' && typeof window.FB !== 'undefined' && typeof window.FB.login === 'function') {
+        try {
+          window.FB.login((response) => {
+            if (response && response.authResponse) {
+              window.FB.api('/me', { fields: 'id,name,email,picture.width(250).height(250)' }, (profile) => {
+                if (profile && !profile.error) {
+                  this.handleFacebookProfile(profile);
+                } else {
+                  this.promptCustomFacebookLogin();
+                }
+              });
+            } else {
+              console.log('Login de Facebook cancelado o no autorizado');
+            }
+          }, { scope: 'public_profile,email' });
+          return true;
+        } catch (err) {
+          console.warn('FB.login exception:', err);
+        }
       }
+      return false;
+    };
+
+    if (executeFbLogin()) return;
+
+    // Si el SDK de Facebook está cargando en segundo plano, dar un breve tiempo de gracia
+    if (typeof window !== 'undefined' && !window.FB && document.getElementById('facebook-jssdk')) {
+      setTimeout(() => {
+        if (!executeFbLogin()) {
+          this.promptCustomFacebookLogin();
+        }
+      }, 350);
+      return;
     }
 
-    // Fallback interactivo si no está activo FB SDK en localhost/offline
+    // Fallback interactivo si no está activo FB SDK en localhost/offline/bloqueado
     this.promptCustomFacebookLogin();
   },
 
